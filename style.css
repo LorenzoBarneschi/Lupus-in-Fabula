@@ -26,6 +26,10 @@ body {
     display: flex;
     justify-content: center;
     background-image: radial-gradient(circle at 50% 20%, #171b28 0%, var(--bg-dark) 80%);
+    
+    /* Protezione Safe Area iPhone (Dynamic Island & Notch) */
+    padding-top: max(env(safe-area-inset-top, 0px), 24px);
+    padding-bottom: max(env(safe-area-inset-bottom, 0px), 20px);
 }
 
 #main-layout {
@@ -46,16 +50,17 @@ body {
     padding-bottom: 30px;
 }
 
-/* Barra di Controllo Regia */
+/* Barra di Controllo Regia (Spaziata sotto la Dynamic Island) */
 .narrator-bar {
     display: flex;
     justify-content: space-between;
     align-items: center;
     background: rgba(18, 21, 31, 0.95);
     border: 1px solid var(--card-border);
-    padding: 8px 14px;
+    padding: 10px 14px;
     border-radius: 8px;
-    margin-bottom: 14px;
+    margin-bottom: 18px;
+    margin-top: 6px;
 }
 .bar-phase-indicator {
     font-family: 'Cinzel', serif;
@@ -322,12 +327,13 @@ h1, h2, h3, .glow-title, .victory-title {
     margin-top: 15px;
 }
 
-/* Header Centrato Perfetto Rivelazione Carte */
+/* Header Centrato Perfetto Rivelazione Carte (Spaziato da Dynamic Island) */
 .dist-header-centered {
     display: flex;
     flex-direction: column;
     align-items: center;
     text-align: center;
+    margin-top: 12px;
     margin-bottom: 15px;
 }
 .dist-sub-line {
@@ -458,7 +464,7 @@ h1, h2, h3, .glow-title, .victory-title {
 }
 .caller-target-player { font-size: 0.95rem; color: var(--text-muted); margin-top: 6px; }
 
-/* Action Panel a Flusso Naturale */
+/* Action Panel */
 .action-panel {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -488,7 +494,7 @@ h1, h2, h3, .glow-title, .victory-title {
     border-color: #444;
 }
 
-/* Footer Notte: Pulsante Conferma Centrato e Grande */
+/* Footer Notte */
 .night-footer-nav {
     display: flex;
     justify-content: center;
@@ -597,9 +603,21 @@ h1, h2, h3, .glow-title, .victory-title {
     margin-bottom: 16px;
 }
 
-/* SIDEBAR HUD */
+/* BACKDROP DI CHIUSURA HUD */
+.hud-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(3px);
+    z-index: 1999;
+}
+
+/* SIDEBAR HUD NARRATORE (SAFE AREA & TOUCH) */
 .narrator-hud {
-    width: 280px;
+    width: 300px;
     background: var(--card-dark);
     border: 1px solid var(--card-border);
     border-radius: 10px;
@@ -620,33 +638,40 @@ h1, h2, h3, .glow-title, .victory-title {
 }
 .hud-title {
     font-family: 'Cinzel', serif;
-    font-size: 0.85rem;
+    font-size: 0.9rem;
     color: var(--gold);
     font-weight: bold;
 }
-.hud-close-mobile { display: none; cursor: pointer; color: #ff5555; font-weight: bold; }
+.hud-close-mobile { 
+    display: none; 
+    cursor: pointer; 
+    color: #ff5555; 
+    font-weight: bold;
+    font-size: 1.5rem;
+    padding: 4px 8px;
+}
 .hud-stats {
     display: flex;
     justify-content: space-between;
-    font-size: 0.8rem;
+    font-size: 0.85rem;
     color: var(--text-muted);
     margin-bottom: 12px;
 }
 .hud-list {
     display: flex;
     flex-direction: column;
-    gap: 6px;
+    gap: 8px;
     overflow-y: auto;
-    max-height: 480px;
+    max-height: 520px;
 }
 .hud-row {
     background: #171b26;
-    padding: 8px 10px;
+    padding: 10px 12px;
     border-radius: 6px;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    font-size: 0.85rem;
+    font-size: 0.9rem;
     border-left: 3px solid var(--gold);
 }
 .hud-row.dead {
@@ -702,6 +727,7 @@ h1, h2, h3, .glow-title, .victory-title {
     gap: 8px;
 }
 
+/* RESPONSIVE IPHONE CON DYNAMIC ISLAND */
 @media (max-width: 900px) {
     #main-layout { padding: 8px; }
     .narrator-hud {
@@ -715,6 +741,12 @@ h1, h2, h3, .glow-title, .victory-title {
         max-height: 100vh;
         z-index: 2000;
         border-radius: 0;
+        
+        /* Protezione Dynamic Island in alto per il registro */
+        padding-top: max(env(safe-area-inset-top, 0px), 52px);
+        padding-bottom: max(env(safe-area-inset-bottom, 0px), 24px);
+        box-shadow: -10px 0 30px rgba(0,0,0,0.9);
+        transition: transform 0.3s ease;
     }
     .narrator-hud.open { display: flex; }
     .hud-close-mobile { display: block; }

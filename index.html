@@ -236,11 +236,14 @@
 
         </div>
 
-        <!-- SIDEBAR HUD NARRATORE (VISIBILE SOLO DOPO L'INIZIO) -->
+        <!-- OVERLAY SFONDO SCURO PER CHIUDERE IL REGISTRO AL TOCCO -->
+        <div id="hud-backdrop" class="hud-backdrop hidden" onclick="toggleMobileHUD(false)"></div>
+
+        <!-- SIDEBAR HUD NARRATORE -->
         <aside id="narrator-hud" class="narrator-hud hidden">
             <div class="hud-header">
                 <span class="hud-title">📜 REGISTRO SEGRETO</span>
-                <span class="hud-close-mobile" onclick="toggleMobileHUD()">✕</span>
+                <span class="hud-close-mobile" onclick="toggleMobileHUD(false)">✕</span>
             </div>
             <div class="hud-stats">
                 <span>Vivi: <strong id="hud-alive-count">0</strong></span>
@@ -249,8 +252,8 @@
             <div class="hud-list" id="hud-roster-list"></div>
         </aside>
 
-        <!-- PULSANTE MOBILE PER APRIRE L'HUD (VISIBILE SOLO DOPO L'INIZIO) -->
-        <button id="mobile-hud-btn" class="mobile-hud-btn hidden" onclick="toggleMobileHUD()">
+        <!-- PULSANTE MOBILE PER APRIRE L'HUD -->
+        <button id="mobile-hud-btn" class="mobile-hud-btn hidden" onclick="toggleMobileHUD(true)">
             📜 REGISTRO
         </button>
 

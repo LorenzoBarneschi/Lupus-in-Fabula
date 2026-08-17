@@ -23,22 +23,30 @@ try {
 // 1. DATABASE RUOLI DEFINITIVO
 // ==========================================
 const rolesDB = [
-    { id: 'villico', name: 'Villico', type: 'multiple', faction: 'Villici', icon: '🌾', desc: 'Nessun potere speciale, ma la tua parola e il tuo voto sono fondamentali.' },
     { id: 'lupo', name: 'Lupo', type: 'multiple', faction: 'Lupi', icon: '🐺', desc: 'Di notte cacci col branco scegliendo all\'unanimità chi sbranare.' },
     { id: 'lupo_alpha', name: 'Lupo Alpha', type: 'unique', faction: 'Lupi', icon: '🐺👑', desc: 'Partecipa al branco e possiede una kill autonoma extra una tantum.' },
-    { id: 'licantropo', name: 'Licantropo', type: 'unique', faction: 'Villici', icon: '🌕', desc: 'Inizia come villico. Se morso dai Lupi, non muore ma si trasforma in Lupo.' },
-    { id: 'dama', name: 'Dama', type: 'unique', faction: 'Villici', icon: '💃', desc: 'Protegge un giocatore ogni notte dalla morte (non la stessa persona per 2 notti).' },
+    { id: 'assassino', name: 'Assassino', type: 'unique', faction: 'Solo', icon: '🔪', desc: 'Vince se indovina e uccide il numero richiesto di ruoli esatti.' },
     { id: 'veggente', name: 'Veggente', type: 'unique', faction: 'Villici', icon: '🔮', desc: 'Ogni notte scopre se un giocatore vivente è un Lupo o Non-Lupo.' },
     { id: 'medium', name: 'Medium', type: 'unique', faction: 'Villici', icon: '🪦', desc: 'Dalla seconda notte interroga un defunto per scoprirne la categoria.' },
+    { id: 'dama', name: 'Dama', type: 'unique', faction: 'Villici', icon: '💃', desc: 'Protegge un giocatore ogni notte dalla morte (non la stessa persona per 2 notti).' },
     { id: 'guardia', name: 'Guardia del Corpo', type: 'unique', faction: 'Villici', icon: '🛡️', desc: 'Sorveglia un bersaglio (non sé stessa). Se attaccato lo salva e scopre l\'aggressore.' },
+    { id: 'licantropo', name: 'Licantropo', type: 'unique', faction: 'Villici', icon: '🌕', desc: 'Inizia come villico. Se morso dai Lupi, non muore ma si trasforma in Lupo.' },
+    { id: 'pazzo', name: 'Pazzo', type: 'unique', faction: 'Solo', icon: '🤪', desc: 'Vince immediatamente e da solo se il villaggio lo manda al Rogo!' },
     { id: 'cieco', name: 'Cieco', type: 'unique', faction: 'Villici', icon: '👁️', desc: 'Confronta due giocatori per scoprire se appartengono alla stessa fazione (max 3 usi).' },
     { id: 'monaca', name: 'Monaca Silente', type: 'unique', faction: 'Villici', icon: '🙏', desc: 'Protegge un bersaglio dalla condanna al rogo per il giorno successivo (max 2 usi).' },
     { id: 'cappuccetto', name: 'Cappuccetto Rosso', type: 'unique', faction: 'Villici', icon: '👧', desc: 'La primissima notte scopre l\'identità segreta di uno dei Lupi.' },
     { id: 'censuratore', name: 'Censuratore', type: 'unique', faction: 'Villici', icon: '🔕', desc: 'Durante il voto diurno può annullare in segreto 1 voto contro un sospettato.' },
     { id: 'appestato', name: 'Appestato', type: 'unique', faction: 'Villici', icon: '☣️', desc: 'Se sbranato trascina chi lo ha ucciso nella tomba. Muore solo dopo la 3ª notte.' },
     { id: 'amanti', name: 'Amanti', type: 'unique', faction: 'Villici', icon: '❤️', desc: 'Dormono a turno in una casa. Se attaccati lì muoiono entrambi; a casa vuota sopravvivono!' },
-    { id: 'pazzo', name: 'Pazzo', type: 'unique', faction: 'Solo', icon: '🤪', desc: 'Vince immediatamente e da solo se il villaggio lo manda al Rogo!' },
-    { id: 'assassino', name: 'Assassino', type: 'unique', faction: 'Solo', icon: '🔪', desc: 'Vince se indovina e uccide il numero richiesto di ruoli esatti.' }
+    { id: 'villico', name: 'Villico', type: 'multiple', faction: 'Villici', icon: '🌾', desc: 'Nessun potere speciale, ma la tua parola e il tuo voto sono fondamentali.' }
+];
+
+// Gerarchia Fissa di Ordinamento per il Registro Segreto del Narratore
+const HUD_ROLE_ORDER = [
+    'lupo', 'lupo_alpha', 'assassino', 'veggente', 'medium',
+    'dama', 'guardia', 'licantropo', 'pazzo', 'cieco',
+    'monaca', 'cappuccetto', 'censuratore', 'appestato',
+    'amanti', 'villico'
 ];
 
 // ==========================================
@@ -141,6 +149,7 @@ let isCardRevealed = false;
 function initApp() {
     renderRolesGrid();
     loadSavedPlayers();
+    setupSwipeGesture();
 }
 
 async function loadSavedPlayers() {
@@ -338,6 +347,7 @@ function startDistribution() {
     document.getElementById('narrator-hud').classList.add('hidden');
     document.getElementById('mobile-hud-btn').classList.add('hidden');
     document.getElementById('narrator-control-bar').classList.add('hidden');
+    toggleMobileHUD(false);
 
     switchScreen('screen-distribution');
     renderDistCard();
@@ -351,7 +361,6 @@ function renderDistCard() {
     
     const p = gameState.roster[currentDistIndex];
     
-    // Testi Centrati e Personalizzati
     document.getElementById('dist-player-name').innerText = `TURNO DI: ${p.name.toUpperCase()}`;
     document.getElementById('dist-pass-text').innerText = `Passa il telefono a ${p.name}.`;
     document.getElementById('dist-tap-text').innerText = `${p.name}, tocca la carta per rivelarla.`;
@@ -434,7 +443,6 @@ function buildNightStepsQueue() {
     const hasRole = (rId) => gameState.roster.some(p => p.role.id === rId);
     const livingAmanti = gameState.roster.filter(p => p.role.id === 'amanti' && p.isAlive);
 
-    // 0. Amanti prima di tutti ogni notte
     if (livingAmanti.length === 2) {
         steps.push({
             id: 'amanti_shelter',
@@ -493,7 +501,6 @@ function renderNightStep() {
     document.getElementById('caller-title').innerText = step.title;
     document.getElementById('caller-prompt').innerText = `"${step.prompt}"`;
 
-    // Mostra TUTTI i giocatori che possiedono il ruolo (es: entrambi gli Amanti)
     const playersOfRole = gameState.roster.filter(p => p.role.id === step.roleId);
     let ownerName = '';
 
@@ -1164,6 +1171,7 @@ function showVictory(faction, storyText) {
     document.getElementById('narrator-control-bar').classList.add('hidden');
     document.getElementById('narrator-hud').classList.add('hidden');
     document.getElementById('mobile-hud-btn').classList.add('hidden');
+    toggleMobileHUD(false);
 
     const title = document.getElementById('victory-title');
     const icon = document.getElementById('victory-icon');
@@ -1200,11 +1208,14 @@ function abortGameConfirm() {
         document.getElementById('narrator-control-bar').classList.add('hidden');
         document.getElementById('narrator-hud').classList.add('hidden');
         document.getElementById('mobile-hud-btn').classList.add('hidden');
+        toggleMobileHUD(false);
         switchScreen('screen-setup');
     }
 }
 
-// HUD & Utility
+// ==========================================
+// 11. HUD NARRATORE (ORDINAMENTO & GESTI)
+// ==========================================
 function updateNarratorHUD() {
     const list = document.getElementById('hud-roster-list');
     const aliveCount = document.getElementById('hud-alive-count');
@@ -1218,16 +1229,58 @@ function updateNarratorHUD() {
     aliveCount.innerText = living.length;
     wolvesCount.innerText = wolves.length;
 
-    list.innerHTML = gameState.roster.map(p => `
+    // Ordinamento Rigoroso secondo la Gerarchia richiesta
+    const sortedRoster = [...gameState.roster].sort((a, b) => {
+        let indexA = HUD_ROLE_ORDER.indexOf(a.role.id);
+        let indexB = HUD_ROLE_ORDER.indexOf(b.role.id);
+        if (indexA === -1) indexA = 99;
+        if (indexB === -1) indexB = 99;
+        return indexA - indexB;
+    });
+
+    list.innerHTML = sortedRoster.map(p => `
         <div class="hud-row ${p.isAlive ? '' : 'dead'}">
             <span><strong>${p.name}</strong> ${p.isWolf && p.isAlive ? '🐺' : ''}</span>
-            <span>${p.role.icon} ${p.role.name}</span>
+            <span>${p.role.name} ${p.role.icon}</span>
         </div>
     `).join('');
 }
 
-function toggleMobileHUD() {
-    document.getElementById('narrator-hud').classList.toggle('open');
+function toggleMobileHUD(forceState) {
+    const hud = document.getElementById('narrator-hud');
+    const backdrop = document.getElementById('hud-backdrop');
+
+    if (forceState !== undefined) {
+        if (forceState) {
+            hud.classList.add('open');
+            backdrop.classList.remove('hidden');
+        } else {
+            hud.classList.remove('open');
+            backdrop.classList.add('hidden');
+        }
+    } else {
+        hud.classList.toggle('open');
+        backdrop.classList.toggle('hidden');
+    }
+}
+
+// Gesto Swipe da Sinistra verso Destra per chiudere il registro
+function setupSwipeGesture() {
+    const hud = document.getElementById('narrator-hud');
+    let touchStartX = 0;
+    let touchEndX = 0;
+
+    hud.addEventListener('touchstart', (e) => {
+        touchStartX = e.changedTouches[0].screenX;
+    }, { passive: true });
+
+    hud.addEventListener('touchend', (e) => {
+        touchEndX = e.changedTouches[0].screenX;
+        // Se trascini verso destra per più di 60px -> chiudi
+        if (touchEndX - touchStartX > 60) {
+            toggleMobileHUD(false);
+        }
+    }, { passive: true });
 }
 
 function switchScreen(screenId) {
