@@ -4,7 +4,7 @@
 const rolesDB = [
     { id: 'villico', name: 'Villico', type: 'multiple', faction: 'Villici', icon: '🌾', desc: 'Nessun potere speciale, ma la tua parola e il tuo voto sono fondamentali.' },
     { id: 'lupo', name: 'Lupo', type: 'multiple', faction: 'Lupi', icon: '🐺', desc: 'Di notte cacci col branco scegliendo all\'unanimità chi sbranare.' },
-    { id: 'lupo_alpha', name: 'Lupo Alpha', type: 'unique', faction: 'Lupi', icon: '🐺👑', desc: 'Partecipa al branco e possiede una kill autonoma extra una tantum.' },
+    { id: 'lupo_alpha', name: 'Lupo Alpha', type: 'unique', faction: 'Lupi', icon: '🐺👑', desc: 'Partecipa al branco e possiede colpi letali extra autonomi.' },
     { id: 'licantropo', name: 'Licantropo', type: 'unique', faction: 'Villici', icon: '🌕', desc: 'Inizia come villico. Se morso dai Lupi, non muore ma si trasforma in Lupo.' },
     { id: 'dama', name: 'Dama', type: 'unique', faction: 'Villici', icon: '💃', desc: 'Protegge un giocatore ogni notte dalla morte (non la stessa persona per 2 notti).' },
     { id: 'veggente', name: 'Veggente', type: 'unique', faction: 'Villici', icon: '🔮', desc: 'Ogni notte scopre se un giocatore vivente è un Lupo o Non-Lupo.' },
@@ -106,7 +106,8 @@ let gameState = {
         assassinoKills: 0,
         assassinoBlocked: false,
         ciecoUses: 0,
-        monacaUses: 0
+        monacaUses: 0,
+        alphaKillsUsed: 0
     }
 };
 
@@ -261,7 +262,7 @@ function validateDeck() {
 }
 
 // ==========================================
-// 5. ASSEGNAZIONE RUOLI (PASS & PLAY CON IMMAGINI)
+// 5. ASSEGNAZIONE RUOLI (PASS & PLAY)
 // ==========================================
 function startDistribution() {
     gameState.deck = [];
@@ -299,7 +300,6 @@ function renderDistCard() {
     document.getElementById('dist-player-name').innerText = `Turno di: ${p.name}`;
     document.getElementById('dist-instruction').innerText = `Passa il telefono a ${p.name}. Tocca la carta per rivelarla.`;
 
-    // Caricamento Immagine Dinamica (se esiste nella cartella assets/)
     const frontImg = document.getElementById('card-front-image');
     frontImg.src = `assets/${p.role.id}.jpg`;
     frontImg.style.display = 'block';
@@ -309,7 +309,6 @@ function renderDistCard() {
     document.getElementById('card-role-faction').innerText = `FAZIONE: ${p.role.faction}`;
     document.getElementById('card-role-desc').innerText = p.role.desc;
 
-    // Didascalia di chiarezza
     document.getElementById('caption-role-name').innerText = `${p.role.name.toUpperCase()} ${p.role.icon}`;
 }
 
@@ -340,7 +339,7 @@ function showDuskTransition() {
 }
 
 // ==========================================
-// 6. MOTORE NOTTE
+// 6. MOTORE NOTTE (ORDINE RISVEGLI)
 // ==========================================
 function startNightSteps() {
     gameState.nightActions = {
@@ -349,6 +348,7 @@ function startNightSteps() {
         assassinoTarget: null,
         assassinoRoleGuess: null,
         wolvesTarget: null,
+        alphaWolfTarget: null,
         amantiShelter: null,
         ciecoChoice: [],
         monacaTarget: null,
@@ -369,7 +369,7 @@ function buildNightStepsQueue() {
     const hasRole = (rId) => gameState.roster.some(p => p.role.id === rId);
     const livingAmanti = gameState.roster.filter(p => p.role.id === 'amanti' && p.isAlive);
 
-    // Amanti si svegliano per primi ogni notte
+    // 0. Amanti prima di chiunque altro
     if (livingAmanti.length === 2) {
         steps.push({
             id: 'amanti_shelter',
@@ -395,7 +395,15 @@ function buildNightStepsQueue() {
     if (hasRole('assassino')) {
         steps.push({ id: 'assassino', title: 'ASSASSINO', icon: '🔪', roleId: 'assassino', prompt: 'Di chi vuoi indovinare il ruolo per sferrare il colpo mortale?' });
     }
+    
+    // 4a. Branco Lupi
     steps.push({ id: 'lupi', title: 'BRANCO DEI LUPI', icon: '🐺', roleId: 'lupo', prompt: 'Chi avete deciso all\'unanimità di sbranare stanotte?' });
+
+    // 4b. Lupo Alpha (Kill autonoma extra)
+    if (hasRole('lupo_alpha')) {
+        steps.push({ id: 'lupo_alpha', title: 'LUPO ALPHA (KILL EXTRA)', icon: '🐺👑', roleId: 'lupo_alpha', prompt: 'Vuoi usare il tuo colpo letale autonomo stanotte?' });
+    }
+
     if (hasRole('cieco')) {
         steps.push({ id: 'cieco', title: 'CIECO', icon: '👁️', roleId: 'cieco', prompt: 'Indica due persone per scoprire se appartengono alla stessa fazione.' });
     }
@@ -495,6 +503,22 @@ function renderNightStep() {
             panel.innerHTML += `<button class="target-btn" onclick="selectNightTarget('wolvesTarget', '${p.id}', this)">${p.name}</button>`;
         });
         panel.innerHTML += `<button class="target-btn" style="border-style:dashed;" onclick="selectNightTarget('wolvesTarget', null, this)">Nessun attacco</button>`;
+    } else if (step.id === 'lupo_alpha') {
+        const maxKills = gameState.players.length <= 10 ? 1 : 2;
+        const remainingKills = maxKills - gameState.history.alphaKillsUsed;
+
+        if (remainingKills <= 0) {
+            panel.innerHTML = `<div style="grid-column: 1/-1; text-align:center; padding:15px; color:#aaa; background:#171b26; border-radius:8px;">
+                🐺👑 Il Lupo Alpha ha esaurito i suoi colpi autonomi per questa partita (0/${maxKills}).
+            </div>`;
+        } else {
+            const nonWolvesLiving = living.filter(p => !p.isWolf);
+            nonWolvesLiving.forEach(p => {
+                panel.innerHTML += `<button class="target-btn" onclick="selectNightTarget('alphaWolfTarget', '${p.id}', this)">${p.name}</button>`;
+            });
+            panel.innerHTML += `<button class="target-btn" style="border-style:dashed;" onclick="selectNightTarget('alphaWolfTarget', null, this)">Non usare la kill extra</button>`;
+            panel.innerHTML += `<div style="grid-column: 1/-1; text-align:center; font-size:0.8rem; color:var(--gold); margin-top:8px;">Colpi extra rimasti: ${remainingKills}/${maxKills}</div>`;
+        }
     } else if (step.id === 'cieco') {
         if (gameState.history.ciecoUses >= 3) {
             panel.innerHTML = `<div style="grid-column: 1/-1; text-align:center; padding:15px; color:#aaa; background:#171b26; border-radius:8px;">
@@ -535,7 +559,7 @@ function renderNightStep() {
         panel.innerHTML = `<div style="grid-column: 1/-1; text-align:center; padding:16px; background:#1b2030; border-radius:8px; border:1px solid ${saved ? '#44ff44' : '#444'};">
             Esito per la Guardia: <br>
             <strong style="color:${saved ? '#44ff44' : '#ff5555'}; font-size:1.15rem;">
-                ${saved ? `✅ HA SALVATO ${saved.targetName}! Attacco da: ${saved.attacker}` : '❌ Nessun attacco intercettato.'}
+                ${saved ? `✅ HA SALVATO ${saved.targetName}!<br><span style="font-size:0.95rem; color:#fff;">L'attacco proveniva dal giocatore: <span style="color:var(--gold);">${saved.attackerName}</span></span>` : '❌ Nessun attacco intercettato.'}
             </strong>
         </div>`;
     }
@@ -611,14 +635,25 @@ function revealMediumGuide(playerId, btn) {
     alert(`Responso Medium su ${p.name}:\n\nCategoria: ${cat}\n\nGesto silenzioso da fare al Medium: ${gesture}`);
 }
 
+// Controllo Guardia del Corpo con Nome Singolo Giocatore
 function checkGuardiaSuccess() {
     if (!gameState.nightActions.guardiaTarget) return null;
     const target = gameState.roster.find(p => p.id === gameState.nightActions.guardiaTarget);
+
+    // Se attaccato dai Lupi
     if (gameState.nightActions.wolvesTarget === target.id) {
-        return { targetName: target.name, attacker: 'BRANCO DEI LUPI' };
+        const aWolf = gameState.roster.filter(p => p.isWolf && p.isAlive).sort(() => Math.random() - 0.5)[0];
+        return { targetName: target.name, attackerName: aWolf ? aWolf.name : 'Sconosciuto' };
     }
-    if (gameState.nightActions.assassinoTarget === target.id) {
-        return { targetName: target.name, attacker: 'ASSASSINO' };
+    // Se attaccato dal Lupo Alpha (extra)
+    if (gameState.nightActions.alphaWolfTarget === target.id) {
+        const alpha = gameState.roster.find(p => p.role.id === 'lupo_alpha');
+        return { targetName: target.name, attackerName: alpha ? alpha.name : 'Sconosciuto' };
+    }
+    // Se attaccato dall'Assassino
+    if (gameState.nightActions.assassinoTarget === target.id && gameState.nightActions.assassinoRoleGuess === target.role.id) {
+        const assassin = gameState.roster.find(p => p.role.id === 'assassino');
+        return { targetName: target.name, attackerName: assassin ? assassin.name : 'Sconosciuto' };
     }
     return null;
 }
@@ -631,6 +666,9 @@ function submitNightStep() {
     }
     if (step.id === 'guardia') {
         gameState.history.lastGuardiaTarget = gameState.nightActions.guardiaTarget;
+    }
+    if (step.id === 'lupo_alpha' && gameState.nightActions.alphaWolfTarget) {
+        gameState.history.alphaKillsUsed++;
     }
     if (step.id === 'monaca' && gameState.nightActions.monacaTarget) {
         gameState.history.monacaUses++;
@@ -653,36 +691,50 @@ function resolveNightOutcomes() {
     let plagueTriggered = false;
 
     const wolfTarget = gameState.roster.find(p => p.id === gameState.nightActions.wolvesTarget);
+    const alphaTarget = gameState.roster.find(p => p.id === gameState.nightActions.alphaWolfTarget);
     const damaProt = gameState.nightActions.damaTarget;
     const guardiaProt = gameState.nightActions.guardiaTarget;
     const amantiShelterId = gameState.nightActions.amantiShelter;
 
-    if (wolfTarget) {
-        const isProtected = (wolfTarget.id === damaProt || wolfTarget.id === guardiaProt);
+    // Helper per gestire attacchi dei lupi
+    function handleWolfAttack(target) {
+        if (!target) return;
+        const isProtected = (target.id === damaProt || target.id === guardiaProt);
         
-        if (wolfTarget.role.id === 'amanti') {
-            if (wolfTarget.id === amantiShelterId) {
+        if (target.role.id === 'amanti') {
+            if (target.id === amantiShelterId) {
                 if (!isProtected) {
-                    gameState.roster.filter(p => p.role.id === 'amanti' && p.isAlive).forEach(am => deathsThisNight.push({ player: am, reason: 'wolves' }));
+                    gameState.roster.filter(p => p.role.id === 'amanti' && p.isAlive).forEach(am => {
+                        if (!deathsThisNight.some(d => d.player.id === am.id)) deathsThisNight.push({ player: am, reason: 'wolves' });
+                    });
                 }
             }
-        } else if (wolfTarget.role.id === 'licantropo') {
+        } else if (target.role.id === 'licantropo') {
             if (!isProtected) {
-                wolfTarget.isWolf = true;
+                target.isWolf = true;
                 transformedLycan = true;
             }
         } else {
-            if (!isProtected) {
-                deathsThisNight.push({ player: wolfTarget, reason: 'wolves' });
-                if (wolfTarget.role.id === 'appestato') {
+            if (!isProtected && !deathsThisNight.some(d => d.player.id === target.id)) {
+                deathsThisNight.push({ player: target, reason: 'wolves' });
+                if (target.role.id === 'appestato') {
                     plagueTriggered = true;
-                    const randomWolf = gameState.roster.filter(p => p.isWolf && p.isAlive && p.id !== wolfTarget.id).sort(() => Math.random() - 0.5)[0];
-                    if (randomWolf) deathsThisNight.push({ player: randomWolf, reason: 'plague' });
+                    const randomWolf = gameState.roster.filter(p => p.isWolf && p.isAlive && p.id !== target.id).sort(() => Math.random() - 0.5)[0];
+                    if (randomWolf && !deathsThisNight.some(d => d.player.id === randomWolf.id)) {
+                        deathsThisNight.push({ player: randomWolf, reason: 'plague' });
+                    }
                 }
             }
         }
     }
 
+    // 1. Attacco Branco Lupi
+    handleWolfAttack(wolfTarget);
+
+    // 2. Attacco Kill Extra Lupo Alpha
+    handleWolfAttack(alphaTarget);
+
+    // 3. Risoluzione Assassino
     if (gameState.nightActions.assassinoTarget && !gameState.history.assassinoBlocked) {
         const aTarget = gameState.roster.find(p => p.id === gameState.nightActions.assassinoTarget);
         const guess = gameState.nightActions.assassinoRoleGuess;
@@ -700,7 +752,9 @@ function resolveNightOutcomes() {
                     if (aTarget.role.id === 'appestato') {
                         plagueTriggered = true;
                         const assassinPlayer = gameState.roster.find(p => p.role.id === 'assassino');
-                        if (assassinPlayer) deathsThisNight.push({ player: assassinPlayer, reason: 'plague' });
+                        if (assassinPlayer && !deathsThisNight.some(d => d.player.id === assassinPlayer.id)) {
+                            deathsThisNight.push({ player: assassinPlayer, reason: 'plague' });
+                        }
                     }
                 }
             }
@@ -711,6 +765,7 @@ function resolveNightOutcomes() {
         gameState.history.assassinoBlocked = false;
     }
 
+    // 4. Morte Appestato dopo Notte 3
     if (gameState.nightNumber === 3) {
         const appestato = gameState.roster.find(p => p.role.id === 'appestato' && p.isAlive);
         if (appestato && !deathsThisNight.some(d => d.player.id === appestato.id)) {
