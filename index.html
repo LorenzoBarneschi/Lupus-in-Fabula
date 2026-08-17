@@ -4,13 +4,25 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Lupus in Fabula - Regia Narratore</title>
+    
+    <!-- PWA Setup & Favicon -->
+    <link rel="icon" type="image/png" href="assets/icon.png">
+    <link rel="apple-touch-icon" href="assets/icon.png">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Lupus">
+
     <link rel="stylesheet" href="style.css">
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;900&family=Lora:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+
+    <!-- Firebase SDK Compatibile (CDN) -->
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 </head>
 <body>
     <div id="main-layout">
         
-        <!-- CONTENITORE PRINCIPALE APP -->
+        <!-- CONTENITORE CENTRALE APP -->
         <div id="app-container">
             
             <!-- BARRA REGIA NARRATORE (EMERGENZA / STOP) -->
@@ -32,9 +44,9 @@
                     <button onclick="addPlayer()" class="btn-gold-action">AGGIUNGI</button>
                 </div>
 
-                <!-- Giocatori in Memoria -->
+                <!-- Giocatori in Memoria (Sincronizzati Cloud) -->
                 <div id="saved-players-section" class="saved-players-box hidden">
-                    <span class="saved-label">⚡ GIOCATORI FREQUENTI:</span>
+                    <span class="saved-label">⚡ GIOCATORI FREQUENTI (CLOUD CLOUD):</span>
                     <div id="saved-players-chips" class="saved-chips-list"></div>
                 </div>
                 
@@ -81,13 +93,30 @@
                     </div>
                 </div>
 
-                <!-- Didascalia di chiarezza assoluta sotto la carta -->
+                <!-- Didascalia di chiarezza sotto la carta -->
                 <div class="card-caption-banner hidden" id="card-caption-banner">
                     Il tuo ruolo è: <strong id="caption-role-name">VILLICO 🌾</strong>
                 </div>
 
                 <button onclick="nextPlayerDistribution()" class="btn-gold-action hidden" id="btn-next-player">
                     HO MEMORIZZATO • NASCONDI
+                </button>
+            </div>
+
+            <!-- SCHERMATA 2.5: ASSEGNAZIONE COMPLETATA (CUSCINETTO DI SICUREZZA) -->
+            <div id="screen-pass-complete" class="screen">
+                <div class="lock-icon">🔒</div>
+                <h2 class="glow-title">Tutte le Carte Assegnate</h2>
+                <p class="subtitle">Schermata protetta da occhi indiscreti</p>
+                
+                <div class="prose-card">
+                    "Tutti i giocatori hanno conosciuto il proprio destino nell'ombra. 
+                    <br><br>
+                    <strong>Riconsegna ora il dispositivo nelle mani del Narratore.</strong>"
+                </div>
+
+                <button class="btn-gold-huge" onclick="narratorStartGame()">
+                    SONO IL NARRATORE • INIZIA PARTITA ➔
                 </button>
             </div>
 
@@ -187,10 +216,10 @@
 
         </div>
 
-        <!-- SIDEBAR HUD NARRATORE (SEMPRE VISIBILE) -->
-        <aside id="narrator-hud" class="narrator-hud">
+        <!-- SIDEBAR HUD NARRATORE (VISIBILE SOLO DOPO L'INIZIO) -->
+        <aside id="narrator-hud" class="narrator-hud hidden">
             <div class="hud-header">
-                <span class="hud-title">📜 REGISTRO VIVI & MORTI</span>
+                <span class="hud-title">📜 REGISTRO SEGRETO</span>
                 <span class="hud-close-mobile" onclick="toggleMobileHUD()">✕</span>
             </div>
             <div class="hud-stats">
@@ -200,8 +229,8 @@
             <div class="hud-list" id="hud-roster-list"></div>
         </aside>
 
-        <!-- PULSANTE MOBILE PER APRIRE L'HUD -->
-        <button id="mobile-hud-btn" class="mobile-hud-btn" onclick="toggleMobileHUD()">
+        <!-- PULSANTE MOBILE PER APRIRE L'HUD (VISIBILE SOLO DOPO L'INIZIO) -->
+        <button id="mobile-hud-btn" class="mobile-hud-btn hidden" onclick="toggleMobileHUD()">
             📜 REGISTRO
         </button>
 

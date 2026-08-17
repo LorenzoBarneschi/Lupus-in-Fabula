@@ -93,7 +93,7 @@ h1, h2, h3, .glow-title, .victory-title {
     text-transform: uppercase;
 }
 
-.logo-wolf, .dusk-icon {
+.logo-wolf, .dusk-icon, .lock-icon {
     text-align: center;
     font-size: 2.5rem;
     margin-bottom: -5px;
@@ -307,7 +307,7 @@ h1, h2, h3, .glow-title, .victory-title {
     margin-top: 15px;
 }
 
-/* Card 3D Flip con Supporto Immagini */
+/* Card 3D Flip */
 .card-scene {
     perspective: 1000px;
     width: 270px;

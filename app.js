@@ -1,10 +1,31 @@
 // ==========================================
+// 0. CONFIGURAZIONE CLOUD FIRESTORE REALE
+// ==========================================
+const firebaseConfig = {
+  apiKey: "AIzaSyCCNywuFBpcNMdhNtaGDxqFWRI-_9_-dcc",
+  authDomain: "lupus-in-fabula-d1197.firebaseapp.com",
+  projectId: "lupus-in-fabula-d1197",
+  storageBucket: "lupus-in-fabula-d1197.firebasestorage.app",
+  messagingSenderId: "149902777417",
+  appId: "1:149902777417:web:95cc3cf21735fe8a6c3398"
+};
+
+let db = null;
+try {
+    firebase.initializeApp(firebaseConfig);
+    db = firebase.firestore();
+    console.log("🔥 Cloud Firestore connesso con successo alla tua applicazione!");
+} catch (e) {
+    console.warn("Firestore fallback su memoria locale:", e);
+}
+
+// ==========================================
 // 1. DATABASE RUOLI DEFINITIVO
 // ==========================================
 const rolesDB = [
     { id: 'villico', name: 'Villico', type: 'multiple', faction: 'Villici', icon: '🌾', desc: 'Nessun potere speciale, ma la tua parola e il tuo voto sono fondamentali.' },
     { id: 'lupo', name: 'Lupo', type: 'multiple', faction: 'Lupi', icon: '🐺', desc: 'Di notte cacci col branco scegliendo all\'unanimità chi sbranare.' },
-    { id: 'lupo_alpha', name: 'Lupo Alpha', type: 'unique', faction: 'Lupi', icon: '🐺👑', desc: 'Partecipa al branco e possiede colpi letali extra autonomi.' },
+    { id: 'lupo_alpha', name: 'Lupo Alpha', type: 'unique', faction: 'Lupi', icon: '🐺👑', desc: 'Partecipa al branco e possiede una kill autonoma extra una tantum.' },
     { id: 'licantropo', name: 'Licantropo', type: 'unique', faction: 'Villici', icon: '🌕', desc: 'Inizia come villico. Se morso dai Lupi, non muore ma si trasforma in Lupo.' },
     { id: 'dama', name: 'Dama', type: 'unique', faction: 'Villici', icon: '💃', desc: 'Protegge un giocatore ogni notte dalla morte (non la stessa persona per 2 notti).' },
     { id: 'veggente', name: 'Veggente', type: 'unique', faction: 'Villici', icon: '🔮', desc: 'Ogni notte scopre se un giocatore vivente è un Lupo o Non-Lupo.' },
@@ -21,7 +42,7 @@ const rolesDB = [
 ];
 
 // ==========================================
-// 2. ENORME LIBRERIA NARRATIVA (80+ VARIABILI)
+// 2. LIBRERIA NARRATIVA (80+ VARIABILI)
 // ==========================================
 const NARRATION_LIB = {
     dusk: [
@@ -115,35 +136,64 @@ let currentDistIndex = 0;
 let isCardRevealed = false;
 
 // ==========================================
-// 4. INIZIALIZZAZIONE & LOCALSTORAGE
+// 4. INIZIALIZZAZIONE & CLOUD FIRESTORE
 // ==========================================
 function initApp() {
     renderRolesGrid();
-    renderSavedPlayers();
+    loadSavedPlayers();
 }
 
-function getSavedPlayers() {
-    return JSON.parse(localStorage.getItem('lupus_saved_players') || '[]');
-}
-
-function savePlayerToMemory(name) {
-    let saved = getSavedPlayers();
-    if (!saved.includes(name)) {
-        saved.push(name);
-        localStorage.setItem('lupus_saved_players', JSON.stringify(saved));
-        renderSavedPlayers();
+async function loadSavedPlayers() {
+    if (db) {
+        try {
+            const snapshot = await db.collection("players").get();
+            const players = [];
+            snapshot.forEach(doc => players.push(doc.data().name));
+            if (players.length > 0) {
+                renderSavedPlayersList(players);
+                return;
+            }
+        } catch (e) {
+            console.error("Errore fetch Firestore, uso localStorage:", e);
+        }
     }
+    const local = JSON.parse(localStorage.getItem('lupus_saved_players') || '[]');
+    renderSavedPlayersList(local);
 }
 
-function removeSavedPlayerFromMemory(name, e) {
+async function savePlayerCloud(name) {
+    let local = JSON.parse(localStorage.getItem('lupus_saved_players') || '[]');
+    if (!local.includes(name)) {
+        local.push(name);
+        localStorage.setItem('lupus_saved_players', JSON.stringify(local));
+    }
+
+    if (db) {
+        try {
+            await db.collection("players").doc(name).set({ name: name, createdAt: firebase.firestore.FieldValue.serverTimestamp() });
+        } catch (e) {
+            console.error("Errore salvataggio Firestore:", e);
+        }
+    }
+    loadSavedPlayers();
+}
+
+async function removePlayerCloud(name, e) {
     e.stopPropagation();
-    let saved = getSavedPlayers().filter(p => p !== name);
-    localStorage.setItem('lupus_saved_players', JSON.stringify(saved));
-    renderSavedPlayers();
+    let local = JSON.parse(localStorage.getItem('lupus_saved_players') || '[]').filter(p => p !== name);
+    localStorage.setItem('lupus_saved_players', JSON.stringify(local));
+
+    if (db) {
+        try {
+            await db.collection("players").doc(name).delete();
+        } catch (e) {
+            console.error("Errore eliminazione Firestore:", e);
+        }
+    }
+    loadSavedPlayers();
 }
 
-function renderSavedPlayers() {
-    const saved = getSavedPlayers();
+function renderSavedPlayersList(saved) {
     const box = document.getElementById('saved-players-section');
     const container = document.getElementById('saved-players-chips');
     
@@ -155,7 +205,7 @@ function renderSavedPlayers() {
     container.innerHTML = saved.map(p => `
         <div class="saved-chip" onclick="addSavedPlayer('${p}')">
             <span>+ ${p}</span>
-            <span class="del-mem" onclick="removeSavedPlayerFromMemory('${p}', event)">✕</span>
+            <span class="del-mem" onclick="removePlayerCloud('${p}', event)">✕</span>
         </div>
     `).join('');
 }
@@ -201,7 +251,7 @@ function addPlayer() {
         return;
     }
     gameState.players.push(name);
-    savePlayerToMemory(name);
+    savePlayerCloud(name);
     input.value = '';
     renderPlayersChips();
     validateDeck();
@@ -284,10 +334,14 @@ function startDistribution() {
     }));
 
     currentDistIndex = 0;
+    
+    // Il registro e i controlli Narratore sono nascosti durante l'assegnazione
+    document.getElementById('narrator-hud').classList.add('hidden');
+    document.getElementById('mobile-hud-btn').classList.add('hidden');
+    document.getElementById('narrator-control-bar').classList.add('hidden');
+
     switchScreen('screen-distribution');
-    document.getElementById('narrator-control-bar').classList.remove('hidden');
     renderDistCard();
-    updateNarratorHUD();
 }
 
 function renderDistCard() {
@@ -326,8 +380,19 @@ function nextPlayerDistribution() {
     if (currentDistIndex < gameState.roster.length) {
         renderDistCard();
     } else {
-        showDuskTransition();
+        // Schermata protetta di cuscinetto per riconsegnare il telefono al Narratore
+        switchScreen('screen-pass-complete');
     }
+}
+
+function narratorStartGame() {
+    // Sblocca il Registro Narratore e la Barra di Regia solo ora
+    document.getElementById('narrator-hud').classList.remove('hidden');
+    document.getElementById('mobile-hud-btn').classList.remove('hidden');
+    document.getElementById('narrator-control-bar').classList.remove('hidden');
+
+    updateNarratorHUD();
+    showDuskTransition();
 }
 
 function showDuskTransition() {
@@ -369,7 +434,7 @@ function buildNightStepsQueue() {
     const hasRole = (rId) => gameState.roster.some(p => p.role.id === rId);
     const livingAmanti = gameState.roster.filter(p => p.role.id === 'amanti' && p.isAlive);
 
-    // 0. Amanti prima di chiunque altro
+    // 0. Amanti prima di tutti ogni notte
     if (livingAmanti.length === 2) {
         steps.push({
             id: 'amanti_shelter',
@@ -396,10 +461,8 @@ function buildNightStepsQueue() {
         steps.push({ id: 'assassino', title: 'ASSASSINO', icon: '🔪', roleId: 'assassino', prompt: 'Di chi vuoi indovinare il ruolo per sferrare il colpo mortale?' });
     }
     
-    // 4a. Branco Lupi
     steps.push({ id: 'lupi', title: 'BRANCO DEI LUPI', icon: '🐺', roleId: 'lupo', prompt: 'Chi avete deciso all\'unanimità di sbranare stanotte?' });
 
-    // 4b. Lupo Alpha (Kill autonoma extra)
     if (hasRole('lupo_alpha')) {
         steps.push({ id: 'lupo_alpha', title: 'LUPO ALPHA (KILL EXTRA)', icon: '🐺👑', roleId: 'lupo_alpha', prompt: 'Vuoi usare il tuo colpo letale autonomo stanotte?' });
     }
@@ -635,22 +698,18 @@ function revealMediumGuide(playerId, btn) {
     alert(`Responso Medium su ${p.name}:\n\nCategoria: ${cat}\n\nGesto silenzioso da fare al Medium: ${gesture}`);
 }
 
-// Controllo Guardia del Corpo con Nome Singolo Giocatore
 function checkGuardiaSuccess() {
     if (!gameState.nightActions.guardiaTarget) return null;
     const target = gameState.roster.find(p => p.id === gameState.nightActions.guardiaTarget);
 
-    // Se attaccato dai Lupi
     if (gameState.nightActions.wolvesTarget === target.id) {
         const aWolf = gameState.roster.filter(p => p.isWolf && p.isAlive).sort(() => Math.random() - 0.5)[0];
         return { targetName: target.name, attackerName: aWolf ? aWolf.name : 'Sconosciuto' };
     }
-    // Se attaccato dal Lupo Alpha (extra)
     if (gameState.nightActions.alphaWolfTarget === target.id) {
         const alpha = gameState.roster.find(p => p.role.id === 'lupo_alpha');
         return { targetName: target.name, attackerName: alpha ? alpha.name : 'Sconosciuto' };
     }
-    // Se attaccato dall'Assassino
     if (gameState.nightActions.assassinoTarget === target.id && gameState.nightActions.assassinoRoleGuess === target.role.id) {
         const assassin = gameState.roster.find(p => p.role.id === 'assassino');
         return { targetName: target.name, attackerName: assassin ? assassin.name : 'Sconosciuto' };
@@ -696,7 +755,6 @@ function resolveNightOutcomes() {
     const guardiaProt = gameState.nightActions.guardiaTarget;
     const amantiShelterId = gameState.nightActions.amantiShelter;
 
-    // Helper per gestire attacchi dei lupi
     function handleWolfAttack(target) {
         if (!target) return;
         const isProtected = (target.id === damaProt || target.id === guardiaProt);
@@ -728,13 +786,9 @@ function resolveNightOutcomes() {
         }
     }
 
-    // 1. Attacco Branco Lupi
     handleWolfAttack(wolfTarget);
-
-    // 2. Attacco Kill Extra Lupo Alpha
     handleWolfAttack(alphaTarget);
 
-    // 3. Risoluzione Assassino
     if (gameState.nightActions.assassinoTarget && !gameState.history.assassinoBlocked) {
         const aTarget = gameState.roster.find(p => p.id === gameState.nightActions.assassinoTarget);
         const guess = gameState.nightActions.assassinoRoleGuess;
@@ -765,7 +819,6 @@ function resolveNightOutcomes() {
         gameState.history.assassinoBlocked = false;
     }
 
-    // 4. Morte Appestato dopo Notte 3
     if (gameState.nightNumber === 3) {
         const appestato = gameState.roster.find(p => p.role.id === 'appestato' && p.isAlive);
         if (appestato && !deathsThisNight.some(d => d.player.id === appestato.id)) {
@@ -1100,6 +1153,9 @@ function checkVictoryConditions() {
 function showVictory(faction, storyText) {
     switchScreen('screen-victory');
     document.getElementById('narrator-control-bar').classList.add('hidden');
+    document.getElementById('narrator-hud').classList.add('hidden');
+    document.getElementById('mobile-hud-btn').classList.add('hidden');
+
     const title = document.getElementById('victory-title');
     const icon = document.getElementById('victory-icon');
     const desc = document.getElementById('victory-story');
@@ -1133,6 +1189,8 @@ function abortGameConfirm() {
     if (confirm("Sei sicuro di voler interrompere la partita attuale e tornare alla schermata di preparazione?")) {
         closeEmergencyModal();
         document.getElementById('narrator-control-bar').classList.add('hidden');
+        document.getElementById('narrator-hud').classList.add('hidden');
+        document.getElementById('mobile-hud-btn').classList.add('hidden');
         switchScreen('screen-setup');
     }
 }
