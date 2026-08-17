@@ -2,7 +2,7 @@
 <html lang="it">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Lupus in Fabula - Regia Narratore</title>
     
     <!-- PWA Setup & Favicon -->
@@ -46,7 +46,7 @@
 
                 <!-- Giocatori in Memoria (Sincronizzati Cloud) -->
                 <div id="saved-players-section" class="saved-players-box hidden">
-                    <span class="saved-label">⚡ GIOCATORI FREQUENTI (CLOUD CLOUD):</span>
+                    <span class="saved-label">⚡ GIOCATORI FREQUENTI (CLOUD):</span>
                     <div id="saved-players-chips" class="saved-chips-list"></div>
                 </div>
                 
@@ -59,15 +59,21 @@
 
                 <div class="roles-grid" id="roles-selection"></div>
 
-                <button onclick="startDistribution()" class="btn-gold-huge" id="btn-start" disabled>
-                    CREA IL MAZZO E ASSEGNA
-                </button>
+                <!-- Contenitore Sticky per il Pulsante Fisso in Basso -->
+                <div class="sticky-footer-btn-container">
+                    <button onclick="startDistribution()" class="btn-gold-huge" id="btn-start" disabled>
+                        CREA IL MAZZO E ASSEGNA
+                    </button>
+                </div>
             </div>
 
-            <!-- SCHERMATA 2: ASSEGNAZIONE CARTE (Pass & Play) -->
+            <!-- SCHERMATA 2: ASSEGNAZIONE CARTE (Pass & Play Centrato) -->
             <div id="screen-distribution" class="screen">
-                <h2 id="dist-player-name" class="glow-title">Turno del Giocatore</h2>
-                <p id="dist-instruction" class="instruction-text">Tocca la carta per scoprire la tua vera natura.</p>
+                <div class="dist-header-centered">
+                    <h2 id="dist-player-name" class="glow-title">TURNO DI: BRUNO</h2>
+                    <p id="dist-pass-text" class="dist-sub-line">Passa il telefono a Bruno.</p>
+                    <p id="dist-tap-text" class="dist-sub-highlight">Bruno, tocca la carta per rivelarla.</p>
+                </div>
                 
                 <div class="card-scene" onclick="flipCard()">
                     <div class="card-3d" id="player-card">
@@ -98,9 +104,11 @@
                     Il tuo ruolo è: <strong id="caption-role-name">VILLICO 🌾</strong>
                 </div>
 
-                <button onclick="nextPlayerDistribution()" class="btn-gold-action hidden" id="btn-next-player">
-                    HO MEMORIZZATO • NASCONDI
-                </button>
+                <div class="center-btn-wrapper">
+                    <button onclick="nextPlayerDistribution()" class="btn-gold-action hidden" id="btn-next-player">
+                        HO MEMORIZZATO • NASCONDI
+                    </button>
+                </div>
             </div>
 
             <!-- SCHERMATA 2.5: ASSEGNAZIONE COMPLETATA (CUSCINETTO DI SICUREZZA) -->
@@ -115,9 +123,11 @@
                     <strong>Riconsegna ora il dispositivo nelle mani del Narratore.</strong>"
                 </div>
 
-                <button class="btn-gold-huge" onclick="narratorStartGame()">
-                    SONO IL NARRATORE • INIZIA PARTITA ➔
-                </button>
+                <div class="center-btn-wrapper">
+                    <button class="btn-gold-huge" onclick="narratorStartGame()">
+                        SONO IL NARRATORE • INIZIA PARTITA ➔
+                    </button>
+                </div>
             </div>
 
             <!-- SCHERMATA 3: TRANSIZIONE NOTTE (Cala il Sole) -->
@@ -128,9 +138,11 @@
                 
                 <div class="prose-card" id="dusk-story-text"></div>
                 
-                <button class="btn-blood-huge" onclick="startNightSteps()">
-                    CHIUDETE TUTTI GLI OCCHI ➔
-                </button>
+                <div class="center-btn-wrapper">
+                    <button class="btn-blood-huge" onclick="startNightSteps()">
+                        CHIUDETE TUTTI GLI OCCHI ➔
+                    </button>
+                </div>
             </div>
 
             <!-- SCHERMATA 4: MOTORE NOTTE PASSO-PASSO -->
@@ -143,14 +155,14 @@
                 <div class="caller-box" id="caller-box">
                     <div class="caller-icon" id="caller-icon">🛡️</div>
                     <h2 id="caller-title">GUARDIA DEL CORPO</h2>
-                    <div class="caller-target-player" id="caller-player-name">Giocatore: <strong>Marco</strong></div>
+                    <div class="caller-target-player" id="caller-player-name">Ruolo di: <strong>Marco</strong></div>
                     <blockquote class="caller-prompt" id="caller-prompt">"Chi vuoi sorvegliare stanotte?"</blockquote>
                 </div>
 
                 <div class="action-panel" id="action-panel"></div>
 
                 <div class="night-footer-nav">
-                    <button class="btn-gold-action" id="btn-next-step" onclick="submitNightStep()">CONFERMA E AVANTI ➔</button>
+                    <button class="btn-gold-action btn-confirm-wide" id="btn-next-step" onclick="submitNightStep()">CONFERMA E AVANTI ➔</button>
                 </div>
             </div>
 
@@ -162,9 +174,11 @@
                 <div class="prose-card" id="dawn-story-text"></div>
                 <div class="dawn-summary-box" id="dawn-summary-box"></div>
 
-                <button class="btn-gold-huge" onclick="startDayDiscussion()">
-                    APRI LA DISCUSSIONE DEL VILLAGGIO 🗣️
-                </button>
+                <div class="center-btn-wrapper">
+                    <button class="btn-gold-huge" onclick="startDayDiscussion()">
+                        APRI LA DISCUSSIONE DEL VILLAGGIO 🗣️
+                    </button>
+                </div>
             </div>
 
             <!-- SCHERMATA 6: GIORNO, VOTAZIONE, CENSURATORE & ROGO -->
@@ -191,18 +205,22 @@
                         <button class="btn-gold-action" onclick="openCensoreModal()">CHIUDI OCCHI E CHIAMA IL CENSURATORE</button>
                     </div>
 
-                    <button class="btn-blood-huge" onclick="processDayVotes()">
-                        VALUTA I VOTI ED ESEGUI IL ROGO 🔥
-                    </button>
+                    <div class="center-btn-wrapper">
+                        <button class="btn-blood-huge" onclick="processDayVotes()">
+                            VALUTA I VOTI ED ESEGUI IL ROGO 🔥
+                        </button>
+                    </div>
                 </div>
 
                 <!-- Box Referendum (Spareggio o Condanna) -->
                 <div id="referendum-view" class="referendum-panel hidden">
                     <div class="prose-card" id="referendum-intro-text"></div>
                     <div class="voting-grid" id="referendum-voting-grid"></div>
-                    <button class="btn-blood-huge" onclick="processReferendumVotes()">
-                        CONCLUDI REFERENDUM ⚖️
-                    </button>
+                    <div class="center-btn-wrapper">
+                        <button class="btn-blood-huge" onclick="processReferendumVotes()">
+                            CONCLUDI REFERENDUM ⚖️
+                        </button>
+                    </div>
                 </div>
             </div>
 
@@ -211,7 +229,9 @@
                 <div class="victory-icon" id="victory-icon">🏆</div>
                 <h1 id="victory-title" class="victory-title">VITTORIA!</h1>
                 <div class="prose-card" id="victory-story"></div>
-                <button class="btn-gold-huge" onclick="location.reload()">NUOVA PARTITA</button>
+                <div class="center-btn-wrapper">
+                    <button class="btn-gold-huge" onclick="location.reload()">NUOVA PARTITA</button>
+                </div>
             </div>
 
         </div>

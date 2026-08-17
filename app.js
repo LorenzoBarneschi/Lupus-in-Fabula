@@ -14,7 +14,7 @@ let db = null;
 try {
     firebase.initializeApp(firebaseConfig);
     db = firebase.firestore();
-    console.log("🔥 Cloud Firestore connesso con successo alla tua applicazione!");
+    console.log("🔥 Cloud Firestore connesso con successo!");
 } catch (e) {
     console.warn("Firestore fallback su memoria locale:", e);
 }
@@ -42,7 +42,7 @@ const rolesDB = [
 ];
 
 // ==========================================
-// 2. LIBRERIA NARRATIVA (80+ VARIABILI)
+// 2. LIBRERIA NARRATIVA
 // ==========================================
 const NARRATION_LIB = {
     dusk: [
@@ -136,7 +136,7 @@ let currentDistIndex = 0;
 let isCardRevealed = false;
 
 // ==========================================
-// 4. INIZIALIZZAZIONE & CLOUD FIRESTORE
+// 4. INIZIALIZZAZIONE & FIRESTORE
 // ==========================================
 function initApp() {
     renderRolesGrid();
@@ -154,7 +154,7 @@ async function loadSavedPlayers() {
                 return;
             }
         } catch (e) {
-            console.error("Errore fetch Firestore, uso localStorage:", e);
+            console.error("Errore fetch Firestore:", e);
         }
     }
     const local = JSON.parse(localStorage.getItem('lupus_saved_players') || '[]');
@@ -335,7 +335,6 @@ function startDistribution() {
 
     currentDistIndex = 0;
     
-    // Il registro e i controlli Narratore sono nascosti durante l'assegnazione
     document.getElementById('narrator-hud').classList.add('hidden');
     document.getElementById('mobile-hud-btn').classList.add('hidden');
     document.getElementById('narrator-control-bar').classList.add('hidden');
@@ -351,8 +350,11 @@ function renderDistCard() {
     document.getElementById('card-caption-banner').classList.add('hidden');
     
     const p = gameState.roster[currentDistIndex];
-    document.getElementById('dist-player-name').innerText = `Turno di: ${p.name}`;
-    document.getElementById('dist-instruction').innerText = `Passa il telefono a ${p.name}. Tocca la carta per rivelarla.`;
+    
+    // Testi Centrati e Personalizzati
+    document.getElementById('dist-player-name').innerText = `TURNO DI: ${p.name.toUpperCase()}`;
+    document.getElementById('dist-pass-text').innerText = `Passa il telefono a ${p.name}.`;
+    document.getElementById('dist-tap-text').innerText = `${p.name}, tocca la carta per rivelarla.`;
 
     const frontImg = document.getElementById('card-front-image');
     frontImg.src = `assets/${p.role.id}.jpg`;
@@ -369,7 +371,7 @@ function renderDistCard() {
 function flipCard() {
     if (isCardRevealed) return;
     document.getElementById('player-card').classList.add('flipped');
-    document.getElementById('dist-instruction').innerText = "Memorizza il ruolo, poi clicca sul pulsante sottostante.";
+    document.getElementById('dist-tap-text').innerText = "Memorizza il ruolo, poi tocca sotto per nascondere.";
     document.getElementById('btn-next-player').classList.remove('hidden');
     document.getElementById('card-caption-banner').classList.remove('hidden');
     isCardRevealed = true;
@@ -380,13 +382,11 @@ function nextPlayerDistribution() {
     if (currentDistIndex < gameState.roster.length) {
         renderDistCard();
     } else {
-        // Schermata protetta di cuscinetto per riconsegnare il telefono al Narratore
         switchScreen('screen-pass-complete');
     }
 }
 
 function narratorStartGame() {
-    // Sblocca il Registro Narratore e la Barra di Regia solo ora
     document.getElementById('narrator-hud').classList.remove('hidden');
     document.getElementById('mobile-hud-btn').classList.remove('hidden');
     document.getElementById('narrator-control-bar').classList.remove('hidden');
@@ -493,10 +493,19 @@ function renderNightStep() {
     document.getElementById('caller-title').innerText = step.title;
     document.getElementById('caller-prompt').innerText = `"${step.prompt}"`;
 
-    const playerOwner = gameState.roster.find(p => p.role.id === step.roleId);
-    const ownerName = playerOwner 
-        ? (playerOwner.isAlive ? playerOwner.name : `${playerOwner.name} (MORTO - Chiama a vuoto per bluffare)`)
-        : 'Branco dei Lupi';
+    // Mostra TUTTI i giocatori che possiedono il ruolo (es: entrambi gli Amanti)
+    const playersOfRole = gameState.roster.filter(p => p.role.id === step.roleId);
+    let ownerName = '';
+
+    if (playersOfRole.length > 1) {
+        ownerName = playersOfRole.map(p => p.isAlive ? p.name : `${p.name} (MORTO)`).join(' e ');
+    } else if (playersOfRole.length === 1) {
+        const p = playersOfRole[0];
+        ownerName = p.isAlive ? p.name : `${p.name} (MORTO - Chiama a vuoto per bluffare)`;
+    } else {
+        ownerName = 'Branco dei Lupi';
+    }
+
     document.getElementById('caller-player-name').innerHTML = `Ruolo di: <strong>${ownerName}</strong>`;
 
     const panel = document.getElementById('action-panel');

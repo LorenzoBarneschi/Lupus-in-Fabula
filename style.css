@@ -32,17 +32,18 @@ body {
     display: flex;
     width: 100%;
     max-width: 1100px;
-    padding: 16px;
+    padding: 12px;
     gap: 20px;
     position: relative;
 }
 
 #app-container {
     flex: 1;
-    max-width: 540px;
+    max-width: 520px;
     margin: 0 auto;
     display: flex;
     flex-direction: column;
+    padding-bottom: 30px;
 }
 
 /* Barra di Controllo Regia */
@@ -211,15 +212,12 @@ h1, h2, h3, .glow-title, .victory-title {
     font-size: 0.95rem;
 }
 
-/* Griglia Ruoli */
+/* Griglia Ruoli Senza Scroll Interno Trappola */
 .roles-grid {
     display: grid;
     grid-template-columns: 1fr;
     gap: 10px;
-    max-height: 380px;
-    overflow-y: auto;
-    padding-right: 4px;
-    margin-bottom: 16px;
+    margin-bottom: 24px;
 }
 .role-card-item {
     background: var(--card-dark);
@@ -238,6 +236,17 @@ h1, h2, h3, .glow-title, .victory-title {
 .role-icon-small { font-size: 1.5rem; }
 .role-name-text { font-family: 'Cinzel', serif; font-size: 0.95rem; font-weight: bold; }
 .role-faction-sub { font-size: 0.75rem; color: var(--text-muted); }
+
+/* Contenitore Sticky per il Pulsante Fisso in Basso */
+.sticky-footer-btn-container {
+    position: sticky;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    background: linear-gradient(to top, var(--bg-dark) 85%, transparent);
+    padding: 15px 0 calc(15px + env(safe-area-inset-bottom, 0px)) 0;
+    z-index: 40;
+}
 
 /* Pill Counter */
 .counter-pill {
@@ -304,15 +313,41 @@ h1, h2, h3, .glow-title, .victory-title {
     width: 100%;
     letter-spacing: 2px;
     box-shadow: 0 6px 20px rgba(139, 0, 0, 0.5);
+}
+
+.center-btn-wrapper {
+    display: flex;
+    justify-content: center;
+    width: 100%;
     margin-top: 15px;
+}
+
+/* Header Centrato Perfetto Rivelazione Carte */
+.dist-header-centered {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    margin-bottom: 15px;
+}
+.dist-sub-line {
+    font-size: 0.95rem;
+    color: var(--text-muted);
+    margin-top: 4px;
+}
+.dist-sub-highlight {
+    font-size: 0.95rem;
+    color: var(--gold-bright);
+    margin-top: 2px;
+    font-style: italic;
 }
 
 /* Card 3D Flip */
 .card-scene {
     perspective: 1000px;
     width: 270px;
-    height: 400px;
-    margin: 15px auto;
+    height: 390px;
+    margin: 10px auto 15px auto;
     cursor: pointer;
 }
 .card-3d {
@@ -385,7 +420,9 @@ h1, h2, h3, .glow-title, .victory-title {
     text-align: center;
     font-family: 'Cinzel', serif;
     font-size: 1rem;
-    margin-bottom: 15px;
+    margin: 10px auto;
+    width: 100%;
+    max-width: 320px;
     box-shadow: 0 4px 15px rgba(0,0,0,0.6);
 }
 
@@ -419,22 +456,20 @@ h1, h2, h3, .glow-title, .victory-title {
     margin-top: 10px;
     font-size: 1.05rem;
 }
-.caller-target-player { font-size: 0.9rem; color: var(--text-muted); margin-top: 4px; }
+.caller-target-player { font-size: 0.95rem; color: var(--text-muted); margin-top: 6px; }
 
-/* Action Panel & Assassino */
+/* Action Panel a Flusso Naturale */
 .action-panel {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 10px;
-    margin-bottom: 16px;
-    max-height: 240px;
-    overflow-y: auto;
+    margin-bottom: 20px;
 }
 .target-btn {
     background: #171b26;
     border: 1px solid var(--card-border);
     color: var(--text-main);
-    padding: 12px 8px;
+    padding: 14px 8px;
     border-radius: 6px;
     cursor: pointer;
     font-family: 'Lora', serif;
@@ -453,19 +488,33 @@ h1, h2, h3, .glow-title, .victory-title {
     border-color: #444;
 }
 
+/* Footer Notte: Pulsante Conferma Centrato e Grande */
+.night-footer-nav {
+    display: flex;
+    justify-content: center;
+    width: 100%;
+    margin-top: 10px;
+    margin-bottom: 40px;
+}
+.btn-confirm-wide {
+    width: 100%;
+    max-width: 380px;
+    padding: 15px 20px;
+    font-size: 1.05rem;
+    box-shadow: 0 4px 20px rgba(212, 175, 55, 0.4);
+}
+
 .assassino-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 6px;
     margin-top: 10px;
-    max-height: 160px;
-    overflow-y: auto;
 }
 .assassino-role-btn {
     background: #0d0f17;
     border: 1px solid var(--card-border);
     color: var(--text-main);
-    padding: 8px;
+    padding: 10px;
     border-radius: 4px;
     font-size: 0.8rem;
     cursor: pointer;
@@ -515,8 +564,6 @@ h1, h2, h3, .glow-title, .victory-title {
     display: flex;
     flex-direction: column;
     gap: 8px;
-    max-height: 280px;
-    overflow-y: auto;
     margin-bottom: 16px;
 }
 .vote-row {
