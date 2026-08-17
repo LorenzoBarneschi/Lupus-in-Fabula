@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Lupus in Fabula - Regia Narratore</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;900&family=Lora:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div id="main-layout">
+        
+        <!-- CONTENITORE PRINCIPALE APP -->
+        <div id="app-container">
+            
+            <!-- BARRA REGIA NARRATORE (EMERGENZA / STOP) -->
+            <div id="narrator-control-bar" class="narrator-bar hidden">
+                <span class="bar-phase-indicator" id="bar-phase-text">PARTITA IN CORSO</span>
+                <button class="btn-emergency" onclick="openEmergencyModal()">⚙️ REGIA / STOP</button>
+            </div>
+
+            <!-- SCHERMATA 1: SETUP -->
+            <div id="screen-setup" class="screen active">
+                <header>
+                    <div class="logo-wolf">🐺</div>
+                    <h1>Lupus in Fabula</h1>
+                    <p class="subtitle">MOTORE DI REGIA PER IL NARRATORE</p>
+                </header>
+                
+                <div class="player-input-card">
+                    <input type="text" id="player-name" placeholder="Nome Giocatore..." onkeypress="if(event.key==='Enter') addPlayer()">
+                    <button onclick="addPlayer()" class="btn-gold-action">AGGIUNGI</button>
+                </div>
+
+                <!-- Giocatori in Memoria -->
+                <div id="saved-players-section" class="saved-players-box hidden">
+                    <span class="saved-label">⚡ GIOCATORI FREQUENTI:</span>
+                    <div id="saved-players-chips" class="saved-chips-list"></div>
+                </div>
+                
+                <div class="players-badge-list" id="players-list"></div>
+                
+                <div class="deck-status-bar">
+                    <div>Giocatori: <strong id="player-count">0</strong></div>
+                    <div>Carte Mazzo: <strong id="deck-count">0</strong></div>
+                </div>
+
+                <div class="roles-grid" id="roles-selection"></div>
+
+                <button onclick="startDistribution()" class="btn-gold-huge" id="btn-start" disabled>
+                    CREA IL MAZZO E ASSEGNA
+                </button>
+            </div>
+
+            <!-- SCHERMATA 2: ASSEGNAZIONE CARTE (Pass & Play) -->
+            <div id="screen-distribution" class="screen">
+                <h2 id="dist-player-name" class="glow-title">Turno del Giocatore</h2>
+                <p id="dist-instruction" class="instruction-text">Tocca la carta per scoprire la tua vera natura.</p>
+                
+                <div class="card-scene" onclick="flipCard()">
+                    <div class="card-3d" id="player-card">
+                        <!-- RETRO DELLA CARTA -->
+                        <div class="card-face card-back">
+                            <img src="assets/retro.jpg" onerror="this.style.display='none'" class="card-image-layer" alt="Retro Carta">
+                            <div class="card-frame fallback-layer">
+                                <div class="card-inner-icon">🐺</div>
+                                <span class="card-back-text">LUPUS IN FABULA</span>
+                                <small class="tap-hint">TOCCA PER RIVELARE</small>
+                            </div>
+                        </div>
+                        <!-- FACCIA ANTERIORE (RUOLO) -->
+                        <div class="card-face card-front">
+                            <img id="card-front-image" src="assets/villico.jpg" onerror="this.style.display='none'" class="card-image-layer" alt="Carta Ruolo">
+                            <div class="card-frame fallback-layer" id="card-front-frame">
+                                <div class="card-role-icon" id="card-role-icon">🌾</div>
+                                <h3 id="card-role-name">VILLICO</h3>
+                                <div class="role-faction-badge" id="card-role-faction">Fazione Villici</div>
+                                <p class="role-short-desc" id="card-role-desc">Descrizione</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Didascalia di chiarezza assoluta sotto la carta -->
+                <div class="card-caption-banner hidden" id="card-caption-banner">
+                    Il tuo ruolo è: <strong id="caption-role-name">VILLICO 🌾</strong>
+                </div>
+
+                <button onclick="nextPlayerDistribution()" class="btn-gold-action hidden" id="btn-next-player">
+                    HO MEMORIZZATO • NASCONDI
+                </button>
+            </div>
+
+            <!-- SCHERMATA 3: TRANSIZIONE NOTTE (Cala il Sole) -->
+            <div id="screen-dusk" class="screen">
+                <div class="dusk-icon">🌙</div>
+                <h2 class="glow-title">Cala la Notte nel Villaggio</h2>
+                <p class="subtitle">Leggi ad alta voce per far chiudere gli occhi a tutti:</p>
+                
+                <div class="prose-card" id="dusk-story-text"></div>
+                
+                <button class="btn-blood-huge" onclick="startNightSteps()">
+                    CHIUDETE TUTTI GLI OCCHI ➔
+                </button>
+            </div>
+
+            <!-- SCHERMATA 4: MOTORE NOTTE PASSO-PASSO -->
+            <div id="screen-night" class="screen">
+                <div class="night-header">
+                    <span class="night-badge" id="night-number-badge">NOTTE 1</span>
+                    <span class="step-indicator" id="night-step-indicator">Fase 1/8</span>
+                </div>
+
+                <div class="caller-box" id="caller-box">
+                    <div class="caller-icon" id="caller-icon">🛡️</div>
+                    <h2 id="caller-title">GUARDIA DEL CORPO</h2>
+                    <div class="caller-target-player" id="caller-player-name">Giocatore: <strong>Marco</strong></div>
+                    <blockquote class="caller-prompt" id="caller-prompt">"Chi vuoi sorvegliare stanotte?"</blockquote>
+                </div>
+
+                <div class="action-panel" id="action-panel"></div>
+
+                <div class="night-footer-nav">
+                    <button class="btn-gold-action" id="btn-next-step" onclick="submitNightStep()">CONFERMA E AVANTI ➔</button>
+                </div>
+            </div>
+
+            <!-- SCHERMATA 5: ALBA E RESPONSO DELLA NOTTE -->
+            <div id="screen-dawn" class="screen">
+                <h2 class="glow-title">L'Alba Sorge ☀️</h2>
+                <p class="subtitle">Leggi questo responso ad alta voce al villaggio:</p>
+                
+                <div class="prose-card" id="dawn-story-text"></div>
+                <div class="dawn-summary-box" id="dawn-summary-box"></div>
+
+                <button class="btn-gold-huge" onclick="startDayDiscussion()">
+                    APRI LA DISCUSSIONE DEL VILLAGGIO 🗣️
+                </button>
+            </div>
+
+            <!-- SCHERMATA 6: GIORNO, VOTAZIONE, CENSURATORE & ROGO -->
+            <div id="screen-day" class="screen">
+                <h2 class="glow-title" id="day-screen-title">Il Tribunale del Villaggio 🔥</h2>
+                <p class="subtitle" id="day-screen-subtitle">Assegna i voti espressi dai vivi o registra le astensioni</p>
+
+                <!-- Box Voto Standard -->
+                <div id="standard-voting-view">
+                    <div class="abstain-box">
+                        <span>⚪ ASTENUTI TOTALI:</span>
+                        <div class="counter-pill">
+                            <button onclick="changeAbstain(-1)">-</button>
+                            <span id="abstain-count">0</span>
+                            <button onclick="changeAbstain(1)">+</button>
+                        </div>
+                    </div>
+
+                    <div class="voting-grid" id="voting-grid"></div>
+
+                    <!-- Box Censuratore -->
+                    <div id="censore-action-box" class="censore-panel hidden">
+                        <p class="censore-title">🔕 Potere del Censuratore Disponibile</p>
+                        <button class="btn-gold-action" onclick="openCensoreModal()">CHIUDI OCCHI E CHIAMA IL CENSURATORE</button>
+                    </div>
+
+                    <button class="btn-blood-huge" onclick="processDayVotes()">
+                        VALUTA I VOTI ED ESEGUI IL ROGO 🔥
+                    </button>
+                </div>
+
+                <!-- Box Referendum (Spareggio o Condanna) -->
+                <div id="referendum-view" class="referendum-panel hidden">
+                    <div class="prose-card" id="referendum-intro-text"></div>
+                    <div class="voting-grid" id="referendum-voting-grid"></div>
+                    <button class="btn-blood-huge" onclick="processReferendumVotes()">
+                        CONCLUDI REFERENDUM ⚖️
+                    </button>
+                </div>
+            </div>
+
+            <!-- SCHERMATA 7: VITTORIA -->
+            <div id="screen-victory" class="screen">
+                <div class="victory-icon" id="victory-icon">🏆</div>
+                <h1 id="victory-title" class="victory-title">VITTORIA!</h1>
+                <div class="prose-card" id="victory-story"></div>
+                <button class="btn-gold-huge" onclick="location.reload()">NUOVA PARTITA</button>
+            </div>
+
+        </div>
+
+        <!-- SIDEBAR HUD NARRATORE (SEMPRE VISIBILE) -->
+        <aside id="narrator-hud" class="narrator-hud">
+            <div class="hud-header">
+                <span class="hud-title">📜 REGISTRO VIVI & MORTI</span>
+                <span class="hud-close-mobile" onclick="toggleMobileHUD()">✕</span>
+            </div>
+            <div class="hud-stats">
+                <span>Vivi: <strong id="hud-alive-count">0</strong></span>
+                <span>Lupi: <strong id="hud-wolves-count">0</strong></span>
+            </div>
+            <div class="hud-list" id="hud-roster-list"></div>
+        </aside>
+
+        <!-- PULSANTE MOBILE PER APRIRE L'HUD -->
+        <button id="mobile-hud-btn" class="mobile-hud-btn" onclick="toggleMobileHUD()">
+            📜 REGISTRO
+        </button>
+
+        <!-- MODALE EMERGENZA / FORZATURA REGIA -->
+        <div id="emergency-modal" class="modal-overlay hidden">
+            <div class="modal-card">
+                <h2 class="glow-title" style="font-size:1.3rem;">Menu Regia Narratore</h2>
+                <p class="subtitle" style="margin-bottom:12px;">Azioni di Controllo Manuale</p>
+
+                <p style="font-size:0.85rem; color:#aaa; margin-bottom:8px;">Dichiara manualmente un vincitore:</p>
+                <div class="modal-grid-buttons">
+                    <button class="btn-gold-action" onclick="forceVictory('villici')">🌾 Vittoria Villici</button>
+                    <button class="btn-gold-action" onclick="forceVictory('lupi')">🐺 Vittoria Lupi</button>
+                    <button class="btn-gold-action" onclick="forceVictory('assassino')">🔪 Vittoria Assassino</button>
+                    <button class="btn-gold-action" onclick="forceVictory('pazzo')">🤪 Vittoria Pazzo</button>
+                </div>
+
+                <hr style="border-color:var(--card-border); margin:15px 0;">
+
+                <button class="btn-blood-huge" style="margin-top:0;" onclick="abortGameConfirm()">
+                    ⚠️ INTERROMPI E TORNA AL SETUP
+                </button>
+                
+                <button class="btn-gold-action" style="margin-top:12px; width:100%; background:#333; color:#fff;" onclick="closeEmergencyModal()">
+                    ANNULLA E TORNA AL GIOCO
+                </button>
+            </div>
+        </div>
+
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
