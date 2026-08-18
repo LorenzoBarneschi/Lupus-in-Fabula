@@ -1,4 +1,3 @@
-javascript
 // ==========================================
 // 0. CONFIGURAZIONE CLOUD FIRESTORE REALE
 // ==========================================
@@ -42,12 +41,14 @@ const rolesDB = [
     { id: 'villico', name: 'Villico', type: 'multiple', faction: 'Villici', icon: '🌾', desc: 'Nessun potere speciale, ma la tua parola e il tuo voto sono fondamentali.' }
 ];
 
+// Pool Varianti Immagini
 const roleImagePool = {
     amanti: ['assets/amanti_1.png', 'assets/amanti_2.png'],
     lupo: ['assets/lupo_1.png', 'assets/lupo_2.png', 'assets/lupo_3.png', 'assets/lupo_4.png', 'assets/lupo.png'],
     villico: ['assets/villico_1.png', 'assets/villico_2.png', 'assets/villico_3.png', 'assets/villico_4.png', 'assets/villico_5.png', 'assets/villico.png']
 };
 
+// Gerarchia Fissa di Ordinamento per il Registro Narratore
 const HUD_ROLE_ORDER = [
     'lupo', 'lupo_alpha', 'assassino', 'veggente', 'medium',
     'dama', 'guardia', 'licantropo', 'pazzo', 'cieco',
@@ -56,17 +57,16 @@ const HUD_ROLE_ORDER = [
 ];
 
 // ==========================================
-// 2. LIBRERIA NARRATIVA & SHUFFLE-BAG
+// 2. LIBRERIA NARRATIVA
 // ==========================================
-const NARRATION_MASTER_LIB = {
+const NARRATION_LIB = {
     dusk: [
         "Il sole scompare dietro le creste montuose. Le porte vengono serrate con pesanti catene: cala la notte, chiudete tutti gli occhi...",
         "Le campane della torre battono i rintocchi della sera. Un silenzio di piombo avvolge la piazza. Chiudete tutti gli occhi...",
         "Un vento gelido spegne le ultime fiaccole. Il buio inghiotte ogni cosa: villici e mostri, chiudete tutti gli occhi...",
         "Le ombre si allungano sui vicoliacci deserti. La caccia notturna ha inizio: chiudete tutti gli occhi...",
         "Il cielo si tinge del colore del sangue antico. Ognuno si rintani nel proprio giaciglio: chiudete tutti gli occhi...",
-        "Le bestie cominciano ad affilare gli artigli nel bosco. Il villaggio dorme: chiudete tutti gli occhi...",
-        "Le tenebre calano senza pietà sulla vallata. Non osate aprire gli occhi fino al canto del gallo: chiudete tutti gli occhi..."
+        "Le bestie cominciano ad affilare gli artigli nel bosco. Il villaggio dorme: chiudete tutti gli occhi..."
     ],
     dawnPeace: [
         "Le prime luci dell'alba accarezzano i tetti di pietra. I lupi hanno ululato a vuoto stanotte: nessuno è caduto vittima delle tenebre!",
@@ -113,25 +113,6 @@ const NARRATION_MASTER_LIB = {
         "I voti su {NAME} equivalgono esattamente al numero di chi voleva astenersi! Si apre il Referendum di Condanna: ELIMINARE o GRAZIARE?"
     ]
 };
-
-let phraseBags = {};
-
-function getUniqueNarration(category) {
-    if (!phraseBags[category] || phraseBags[category].length === 0) {
-        phraseBags[category] = cryptoShuffle([...NARRATION_MASTER_LIB[category]]);
-    }
-    return phraseBags[category].pop();
-}
-
-function cryptoShuffle(array) {
-    for (let i = array.length - 1; i > 0; i--) {
-        const randomBuffer = new Uint32Array(1);
-        window.crypto.getRandomValues(randomBuffer);
-        const j = randomBuffer[0] % (i + 1);
-        [array[i], array[j]] = [array[j], array[i]];
-    }
-    return array;
-}
 
 // ==========================================
 // 3. STATO GLOBALE DELLA PARTITA
@@ -347,13 +328,13 @@ function validateDeck() {
 }
 
 // ==========================================
-// 5. ASSEGNAZIONE RUOLI & RANDOMIZZAZIONE
+// 5. ASSEGNAZIONE RUOLI & GESTIONE VARIANTI IMMAGINI
 // ==========================================
 function startDistribution() {
     gameState.deck = [];
 
-    const wolvesVariants = cryptoShuffle([...(roleImagePool.lupo || [])]);
-    const villiciVariants = cryptoShuffle([...(roleImagePool.villico || [])]);
+    const wolvesVariants = [...(roleImagePool.lupo || [])].sort(() => Math.random() - 0.5);
+    const villiciVariants = [...(roleImagePool.villico || [])].sort(() => Math.random() - 0.5);
     let wolfVarIdx = 0;
     let villicoVarIdx = 0;
 
@@ -378,8 +359,8 @@ function startDistribution() {
         }
     }
 
-    const shuffledPlayers = cryptoShuffle([...gameState.players]);
-    const shuffledDeck = cryptoShuffle([...gameState.deck]);
+    const shuffledPlayers = [...gameState.players].sort(() => Math.random() - 0.5);
+    const shuffledDeck = [...gameState.deck].sort(() => Math.random() - 0.5);
 
     gameState.roster = shuffledPlayers.map((name, idx) => ({
         id: 'p_' + idx,
@@ -392,7 +373,7 @@ function startDistribution() {
 
     currentDistIndex = 0;
     
-    document.getElementById('narrator-hud').classList.remove('open');
+    document.getElementById('narrator-hud').classList.add('hidden');
     document.getElementById('mobile-hud-btn').classList.add('hidden');
     document.getElementById('narrator-control-bar').classList.add('hidden');
     toggleMobileHUD(false);
@@ -447,6 +428,7 @@ function nextPlayerDistribution() {
 }
 
 function narratorStartGame() {
+    document.getElementById('narrator-hud').classList.remove('hidden');
     document.getElementById('mobile-hud-btn').classList.remove('hidden');
     document.getElementById('narrator-control-bar').classList.remove('hidden');
 
@@ -457,14 +439,13 @@ function narratorStartGame() {
 function showDuskTransition() {
     switchScreen('screen-dusk');
     document.getElementById('bar-phase-text').innerText = `NOTTE ${gameState.nightNumber} (IN ARRIVO)`;
-    
-    const duskText = getUniqueNarration('dusk');
+    const duskText = NARRATION_LIB.dusk[Math.floor(Math.random() * NARRATION_LIB.dusk.length)];
     document.getElementById('dusk-story-text').innerHTML = `"${duskText}"`;
     updateNarratorHUD();
 }
 
 // ==========================================
-// 6. MOTORE NOTTE
+// 6. MOTORE NOTTE (ORDINE RISVEGLI)
 // ==========================================
 function startNightSteps() {
     gameState.nightActions = {
@@ -907,21 +888,21 @@ function buildDawnScreen(deaths, transformedLycan, plagueTriggered) {
 
     let text = '';
     if (deaths.length === 0) {
-        text = getUniqueNarration('dawnPeace');
+        text = NARRATION_LIB.dawnPeace[Math.floor(Math.random() * NARRATION_LIB.dawnPeace.length)];
     } else if (deaths.length === 1) {
-        let template = getUniqueNarration('dawnSingleDeath');
+        let template = NARRATION_LIB.dawnSingleDeath[Math.floor(Math.random() * NARRATION_LIB.dawnSingleDeath.length)];
         text = template.replace('{DEAD}', `<strong>${deaths[0].player.name}</strong>`);
     } else {
         const deadNames = deaths.map(d => `<strong>${d.player.name}</strong>`).join(' e ');
-        let template = getUniqueNarration('dawnMultiDeath');
+        let template = NARRATION_LIB.dawnMultiDeath[Math.floor(Math.random() * NARRATION_LIB.dawnMultiDeath.length)];
         text = template.replace('{DEAD}', deadNames);
     }
 
     if (plagueTriggered) {
-        text += `<br><br><span style="color:#ff5555;">☣️ ${NARRATION_MASTER_LIB.dawnPlague[0]}</span>`;
+        text += `<br><br><span style="color:#ff5555;">☣️ ${NARRATION_LIB.dawnPlague[0]}</span>`;
     }
     if (transformedLycan) {
-        text += `<br><br><span style="color:#ffaa00;">🌕 ${NARRATION_MASTER_LIB.dawnLycan[0]}</span>`;
+        text += `<br><br><span style="color:#ffaa00;">🌕 ${NARRATION_LIB.dawnLycan[0]}</span>`;
     }
 
     prose.innerHTML = `"${text}"`;
@@ -1035,7 +1016,7 @@ function processDayVotes() {
     });
 
     if (maxVotes === 0) {
-        alert(getUniqueNarration('rogoReprieve'));
+        alert(NARRATION_LIB.rogoReprieve[Math.floor(Math.random() * NARRATION_LIB.rogoReprieve.length)]);
         endDayPhase();
         return;
     }
@@ -1072,7 +1053,7 @@ function startReferendumTie(candidates) {
     document.getElementById('day-screen-subtitle').innerText = 'I candidati non votano. Il villaggio deve scegliere chi eliminare!';
 
     const candNames = candidates.map(c => c.name).join(' e ');
-    let intro = getUniqueNarration('referendumTieIntro');
+    let intro = NARRATION_LIB.referendumTieIntro[Math.floor(Math.random() * NARRATION_LIB.referendumTieIntro.length)];
     document.getElementById('referendum-intro-text').innerHTML = `"${intro.replace('{CANDIDATES}', `<strong>${candNames}</strong>`)}"`;
 
     const grid = document.getElementById('referendum-voting-grid');
@@ -1104,7 +1085,7 @@ function startReferendumCondemn(accused) {
     document.getElementById('day-screen-title').innerText = '⚖️ REFERENDUM DI CONDANNA';
     document.getElementById('day-screen-subtitle').innerText = `${accused.name} non vota. Il villaggio decide tra ELIMINARE o GRAZIARE.`;
 
-    let intro = getUniqueNarration('referendumCondemnIntro');
+    let intro = NARRATION_LIB.referendumCondemnIntro[Math.floor(Math.random() * NARRATION_LIB.referendumCondemnIntro.length)];
     document.getElementById('referendum-intro-text').innerHTML = `"${intro.replace('{NAME}', `<strong>${accused.name}</strong>`)}"`;
 
     const grid = document.getElementById('referendum-voting-grid');
@@ -1172,7 +1153,7 @@ function condemnToRogo(condemned) {
     }
 
     condemned.isAlive = false;
-    let template = getUniqueNarration('rogoCondemn');
+    let template = NARRATION_LIB.rogoCondemn[Math.floor(Math.random() * NARRATION_LIB.rogoCondemn.length)];
     alert(template.replace('{NAME}', condemned.name));
 
     if (condemned.role.id === 'pazzo') {
@@ -1191,7 +1172,7 @@ function endDayPhase() {
 }
 
 // ==========================================
-// 9. VITTORIA MAESTOSA
+// 9. VITTORIA & CONTROLLO REGIA
 // ==========================================
 function checkVictoryConditions() {
     const living = gameState.roster.filter(p => p.isAlive);
@@ -1220,32 +1201,18 @@ function checkVictoryConditions() {
 function showVictory(faction, storyText) {
     switchScreen('screen-victory');
     document.getElementById('narrator-control-bar').classList.add('hidden');
-    document.getElementById('narrator-hud').classList.remove('open');
+    document.getElementById('narrator-hud').classList.add('hidden');
     document.getElementById('mobile-hud-btn').classList.add('hidden');
     toggleMobileHUD(false);
 
     const title = document.getElementById('victory-title');
     const icon = document.getElementById('victory-icon');
     const desc = document.getElementById('victory-story');
-    const frame = document.getElementById('victory-icon-frame');
 
-    if (faction === 'lupi') {
-        title.innerText = 'I LUPI TRIONFANO!';
-        icon.innerText = '🐺';
-        frame.style.boxShadow = '0 0 35px rgba(200, 0, 0, 0.6)';
-    } else if (faction === 'assassino') {
-        title.innerText = 'L\'ASSASSINO HA VINTO!';
-        icon.innerText = '🔪';
-        frame.style.boxShadow = '0 0 35px rgba(120, 50, 200, 0.6)';
-    } else if (faction === 'pazzo') {
-        title.innerText = 'IL PAZZO TRIONFA!';
-        icon.innerText = '🤪';
-        frame.style.boxShadow = '0 0 35px rgba(255, 180, 0, 0.6)';
-    } else {
-        title.innerText = 'I VILLICI HANNO VINTO!';
-        icon.innerText = '🌾';
-        frame.style.boxShadow = '0 0 35px rgba(50, 180, 50, 0.6)';
-    }
+    if (faction === 'lupi') { title.innerText = 'VITTORIA DEI LUPI!'; icon.innerText = '🐺'; }
+    else if (faction === 'assassino') { title.innerText = 'VITTORIA DELL\'ASSASSINO!'; icon.innerText = '🔪'; }
+    else if (faction === 'pazzo') { title.innerText = 'VITTORIA DEL PAZZO!'; icon.innerText = '🤪'; }
+    else { title.innerText = 'VITTORIA DEI VILLICI!'; icon.innerText = '🌾'; }
 
     desc.innerHTML = `"${storyText}"`;
     updateNarratorHUD();
@@ -1271,7 +1238,7 @@ function abortGameConfirm() {
     if (confirm("Sei sicuro di voler interrompere la partita attuale e tornare alla schermata di preparazione?")) {
         closeEmergencyModal();
         document.getElementById('narrator-control-bar').classList.add('hidden');
-        document.getElementById('narrator-hud').classList.remove('open');
+        document.getElementById('narrator-hud').classList.add('hidden');
         document.getElementById('mobile-hud-btn').classList.add('hidden');
         toggleMobileHUD(false);
         switchScreen('screen-setup');
@@ -1279,14 +1246,12 @@ function abortGameConfirm() {
 }
 
 // ==========================================
-// 11. HUD NARRATORE (TRACKER ASSASSINO & SWIPE REALE)
+// 11. HUD NARRATORE (ORDINAMENTO & GESTI)
 // ==========================================
 function updateNarratorHUD() {
     const list = document.getElementById('hud-roster-list');
     const aliveCount = document.getElementById('hud-alive-count');
     const wolvesCount = document.getElementById('hud-wolves-count');
-    const assassinTrackerBox = document.getElementById('hud-assassin-tracker');
-    const assassinPips = document.getElementById('assassin-tracker-pips');
 
     if (!gameState.roster || gameState.roster.length === 0) return;
 
@@ -1295,19 +1260,6 @@ function updateNarratorHUD() {
 
     aliveCount.innerText = living.length;
     wolvesCount.innerText = wolves.length;
-
-    const hasAssassin = gameState.roster.some(p => p.role.id === 'assassino');
-    if (hasAssassin) {
-        assassinTrackerBox.classList.remove('hidden');
-        const requiredKills = gameState.players.length <= 8 ? 2 : (gameState.players.length <= 12 ? 3 : 4);
-        let pipsStr = '';
-        for (let i = 0; i < requiredKills; i++) {
-            pipsStr += (i < gameState.history.assassinoKills) ? '🟢' : '⚪';
-        }
-        assassinPips.innerHTML = `${pipsStr} <small style="color:#aaa;">(${gameState.history.assassinoKills}/${requiredKills})</small>`;
-    } else {
-        assassinTrackerBox.classList.add('hidden');
-    }
 
     const sortedRoster = [...gameState.roster].sort((a, b) => {
         let indexA = HUD_ROLE_ORDER.indexOf(a.role.id);
@@ -1346,28 +1298,17 @@ function toggleMobileHUD(forceState) {
 function setupSwipeGesture() {
     const hud = document.getElementById('narrator-hud');
     let touchStartX = 0;
-    let touchCurrentX = 0;
+    let touchEndX = 0;
 
     hud.addEventListener('touchstart', (e) => {
-        touchStartX = e.touches[0].clientX;
-    }, { passive: true });
-
-    hud.addEventListener('touchmove', (e) => {
-        touchCurrentX = e.touches[0].clientX;
-        let deltaX = touchCurrentX - touchStartX;
-        if (deltaX > 0) {
-            hud.style.transform = `translateX(${deltaX}px)`;
-        }
+        touchStartX = e.changedTouches[0].screenX;
     }, { passive: true });
 
     hud.addEventListener('touchend', (e) => {
-        let deltaX = touchCurrentX - touchStartX;
-        hud.style.transform = '';
-        if (deltaX > 60) {
+        touchEndX = e.changedTouches[0].screenX;
+        if (touchEndX - touchStartX > 60) {
             toggleMobileHUD(false);
         }
-        touchStartX = 0;
-        touchCurrentX = 0;
     }, { passive: true });
 }
 
