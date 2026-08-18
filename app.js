@@ -189,40 +189,55 @@ function selectMode(mode) {
     }
 }
 
+function goHomeFromSetup() {
+    gameState.players = [];
+    onlineState.isOnline = false;
+    onlineState.roomCode = null;
+    if(onlineState.unsubscribeRoom) onlineState.unsubscribeRoom();
+    if(onlineState.unsubscribePlayers) onlineState.unsubscribePlayers();
+    localStorage.removeItem('lupus_online_session');
+    switchScreen('screen-home');
+}
+
 function checkActiveSession() {
     const stored = localStorage.getItem('lupus_online_session');
     if (stored) {
         try {
             const s = JSON.parse(stored);
-            onlineState.roomCode = s.roomCode;
-            onlineState.playerName = s.playerName;
-            onlineState.isNarrator = s.isNarrator;
-            onlineState.isOnline = true;
+            if (!db) { localStorage.removeItem('lupus_online_session'); return; }
 
-            if (s.isNarrator) {
-                db.collection("rooms").doc(s.roomCode).get().then(doc => {
-                    if (doc.exists && doc.data().status === 'waiting') {
+            db.collection("rooms").doc(s.roomCode).get().then(doc => {
+                if (doc.exists && doc.data().status === 'waiting') {
+                    onlineState.roomCode = s.roomCode;
+                    onlineState.playerName = s.playerName;
+                    onlineState.isNarrator = s.isNarrator;
+                    onlineState.isOnline = true;
+
+                    if (s.isNarrator) {
                         document.getElementById('display-room-code').innerText = s.roomCode;
                         switchScreen('screen-online-lobby-narrator');
                         listenToRoomPlayers(s.roomCode);
+                    } else {
+                        document.getElementById('lobby-narrator-name').innerText = "Stanza di " + doc.data().narrator;
+                        switchScreen('screen-online-lobby-player');
+                        listenToRoomStatus(s.roomCode);
+                        listenToRoomPlayers(s.roomCode);
                     }
-                });
-            } else {
-                db.collection("rooms").doc(s.roomCode).get().then(doc => {
-                    if (doc.exists) {
-                        const status = doc.data().status;
-                        if (status === 'waiting') {
-                            document.getElementById('lobby-narrator-name').innerText = "Stanza di " + doc.data().narrator;
-                            switchScreen('screen-online-lobby-player');
-                            listenToRoomStatus(s.roomCode);
-                            listenToRoomPlayers(s.roomCode);
-                        } else if (status === 'playing') {
-                            listenToRoomStatus(s.roomCode);
-                        }
-                    }
-                });
-            }
-        } catch (e) {}
+                } else if (doc.exists && doc.data().status === 'playing' && !s.isNarrator) {
+                    onlineState.roomCode = s.roomCode;
+                    onlineState.playerName = s.playerName;
+                    onlineState.isNarrator = false;
+                    onlineState.isOnline = true;
+                    listenToRoomStatus(s.roomCode);
+                } else {
+                    localStorage.removeItem('lupus_online_session');
+                }
+            }).catch(() => {
+                localStorage.removeItem('lupus_online_session');
+            });
+        } catch (e) {
+            localStorage.removeItem('lupus_online_session');
+        }
     }
 }
 
@@ -262,6 +277,18 @@ async function createOnlineRoom() {
     }
 }
 
+async function abortOnlineRoom() {
+    if(confirm("Sei sicuro di voler chiudere ed eliminare la stanza? Tutti i giocatori verranno rimandati al menu iniziale.")) {
+        try {
+            await db.collection("rooms").doc(onlineState.roomCode).update({ status: 'aborted' });
+            await db.collection("rooms").doc(onlineState.roomCode).delete();
+        } catch(e) {
+            console.error("Errore eliminazione stanza:", e);
+        }
+        forceKickToHome();
+    }
+}
+
 async function joinOnlineRoom() {
     const name = document.getElementById('online-player-name').value.trim();
     const code = document.getElementById('online-room-code').value.trim().toUpperCase();
@@ -272,7 +299,7 @@ async function joinOnlineRoom() {
         const roomRef = db.collection("rooms").doc(code);
         const doc = await roomRef.get();
         
-        if(!doc.exists) { alert("Codice Stanza inesistente!"); return; }
+        if(!doc.exists || doc.data().status === 'aborted') { alert("Codice Stanza inesistente!"); return; }
         if(doc.data().status !== 'waiting') { alert("La partita è già iniziata! Non puoi entrare a metà."); return; }
         
         await roomRef.collection("players").doc(name).set({
@@ -296,6 +323,30 @@ async function joinOnlineRoom() {
         console.error(e);
         alert("Errore di connessione alla stanza.");
     }
+}
+
+async function leaveOnlineRoom() {
+    if(confirm("Vuoi abbandonare la stanza?")) {
+        try {
+            await db.collection("rooms").doc(onlineState.roomCode).collection("players").doc(onlineState.playerName).delete();
+        } catch(e) {
+            console.error("Errore uscita stanza:", e);
+        }
+        forceKickToHome();
+    }
+}
+
+function forceKickToHome(msg) {
+    if(msg) alert(msg);
+    localStorage.removeItem('lupus_online_session');
+    if(onlineState.unsubscribeRoom) onlineState.unsubscribeRoom();
+    if(onlineState.unsubscribePlayers) onlineState.unsubscribePlayers();
+    onlineState.isOnline = false;
+    onlineState.roomCode = null;
+    onlineState.playerName = null;
+    onlineState.isNarrator = false;
+    gameState.players = [];
+    switchScreen('screen-home');
 }
 
 function listenToRoomPlayers(code) {
@@ -338,10 +389,16 @@ function listenToRoomStatus(code) {
     if(onlineState.unsubscribeRoom) onlineState.unsubscribeRoom();
     onlineState.unsubscribeRoom = db.collection("rooms").doc(code)
         .onSnapshot(async snap => {
+            if(!snap.exists) {
+                forceKickToHome("La stanza è stata chiusa dal Narratore.");
+                return;
+            }
             const data = snap.data();
-            if(data && data.status === 'playing') {
+            if(data.status === 'aborted') {
+                forceKickToHome("La stanza è stata chiusa dal Narratore.");
+            } else if(data && data.status === 'playing') {
                 const myDoc = await db.collection("rooms").doc(code).collection("players").doc(onlineState.playerName).get();
-                if(myDoc.exists) {
+                if(myDoc.exists && myDoc.data().role) {
                     showOnlinePlayerCard(myDoc.data());
                 }
             }
@@ -500,7 +557,6 @@ function addPlayerLocal() {
     
     gameState.players.push(name);
     
-    // Salva nel cloud per il locale
     let localSaved = JSON.parse(localStorage.getItem('lupus_saved_players') || '[]');
     if (!localSaved.includes(name)) {
         localSaved.push(name);

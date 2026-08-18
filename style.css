@@ -49,6 +49,32 @@ body {
     padding-bottom: 30px;
 }
 
+/* Pulsanti di Navigazione Indietro / Esci */
+.btn-back-nav {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-family: 'Cinzel', serif;
+    font-size: 0.75rem;
+    letter-spacing: 1px;
+    color: var(--text-muted);
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--card-border);
+    padding: 6px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    width: fit-content;
+    margin-bottom: 12px;
+    transition: 0.15s ease;
+    user-select: none;
+}
+.btn-back-nav:active {
+    transform: scale(0.95);
+    color: var(--gold-bright);
+    border-color: var(--gold);
+    background: rgba(212, 175, 55, 0.1);
+}
+
 /* Header Imperiale */
 .app-imperial-header {
     text-align: center;
@@ -130,6 +156,7 @@ h1, h2, h3, .glow-title, .victory-title {
     flex-direction: column;
     width: 100%;
     animation: fadeIn 0.35s ease;
+    position: relative;
 }
 .screen.active { display: flex; }
 .hidden { display: none !important; }
@@ -402,7 +429,7 @@ h1, h2, h3, .glow-title, .victory-title {
     box-shadow: 0 8px 30px rgba(212, 175, 55, 0.35);
 }
 
-/* --- ANIMAZIONE CARTA 3D SUSPENSE (PIÙ LENTA E FLUIDA) --- */
+/* --- ANIMAZIONE CARTA 3D SUSPENSE --- */
 .card-scene {
     perspective: 1200px;
     -webkit-perspective: 1200px;
@@ -418,7 +445,6 @@ h1, h2, h3, .glow-title, .victory-title {
     position: relative;
     transform-style: preserve-3d;
     -webkit-transform-style: preserve-3d;
-    /* Animazione rallentata e misteriosa (1.05s) */
     transition: transform 1.05s cubic-bezier(0.2, 0.8, 0.2, 1);
     -webkit-transition: -webkit-transform 1.05s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
@@ -895,8 +921,6 @@ h1, h2, h3, .glow-title, .victory-title {
         padding-top: max(env(safe-area-inset-top, 0px), 52px);
         padding-bottom: max(env(safe-area-inset-bottom, 0px), 24px);
         box-shadow: -10px 0 30px rgba(0,0,0,0.9);
-        
-        /* Animazione di scorrimento laterale reale */
         transform: translateX(105%);
         transition: transform 0.35s cubic-bezier(0.25, 1, 0.5, 1);
     }

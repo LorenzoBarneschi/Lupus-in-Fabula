@@ -55,6 +55,9 @@
 
             <!-- SCHERMATA 1 (LOCALE): SETUP TRADIZIONALE -->
             <div id="screen-setup-local" class="screen">
+                <!-- Pulsante Indietro -->
+                <div class="btn-back-nav" onclick="goHomeFromSetup()">🔙 INDIETRO</div>
+
                 <header class="app-imperial-header">
                     <h1 class="imperial-title" style="font-size: 1.4rem;">MODALITÀ LOCALE</h1>
                     <div class="title-separator"><span>✦</span></div>
@@ -88,6 +91,9 @@
 
             <!-- SCHERMATA ONLINE 1: AUTENTICAZIONE E SCELTA (CREA O ENTRA) -->
             <div id="screen-online-auth" class="screen">
+                <!-- Pulsante Indietro -->
+                <div class="btn-back-nav" onclick="goHomeFromSetup()">🔙 INDIETRO</div>
+
                 <header class="app-imperial-header">
                     <h1 class="imperial-title" style="font-size: 1.4rem;">PORTALE DEL VILLAGGIO</h1>
                     <div class="title-separator"><span>✦</span></div>
@@ -97,20 +103,17 @@
                 <div class="prose-card" style="padding: 15px; margin-bottom: 25px;">
                     <label style="display:block; color:var(--gold); font-family:'Cinzel', serif; font-size:0.9rem; margin-bottom:8px; text-align:left;">IL TUO NOME (Senza Emoji):</label>
                     <div class="player-input-card" style="margin-bottom:0;">
-                        <!-- Oninput per bloccare le emoji in tempo reale -->
                         <input type="text" id="online-player-name" placeholder="Inserisci il tuo vero nome..." oninput="this.value = this.value.replace(/([\u2700-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD10-\uDDFF])/g, '');">
                     </div>
                 </div>
 
                 <div class="center-btn-wrapper" style="flex-direction: column; gap: 15px;">
-                    <!-- Pulsante per chi fa il Narratore -->
                     <button class="btn-blood-huge" onclick="createOnlineRoom()">
                         👑 CREA STANZA (FAI IL NARRATORE)
                     </button>
                     
                     <div style="text-align:center; color:var(--text-muted); font-size:0.8rem; margin: 10px 0;">OPPURE</div>
 
-                    <!-- Sezione per chi entra come Giocatore -->
                     <div class="player-input-card">
                         <input type="text" id="online-room-code" placeholder="Codice Stanza (es. LUPO)" style="text-transform: uppercase;" maxlength="6" onkeypress="if(event.key==='Enter') joinOnlineRoom()">
                         <button onclick="joinOnlineRoom()" class="btn-gold-action">ENTRA</button>
@@ -118,8 +121,11 @@
                 </div>
             </div>
 
-            <!-- SCHERMATA ONLINE 2A: LOBBY NARRATORE (Seleziona Ruoli) -->
+            <!-- SCHERMATA ONLINE 2A: LOBBY NARRATORE -->
             <div id="screen-online-lobby-narrator" class="screen">
+                <!-- Pulsante Elimina Stanza -->
+                <div class="btn-back-nav" style="color:#ff5555;" onclick="abortOnlineRoom()">✖ ELIMINA STANZA</div>
+
                 <header class="app-imperial-header">
                     <h1 class="imperial-title" style="font-size: 1.2rem; color: #ff5555;">SALA DEL NARRATORE</h1>
                     <div class="title-separator"><span>✦</span></div>
@@ -147,8 +153,11 @@
                 </div>
             </div>
 
-            <!-- SCHERMATA ONLINE 2B: LOBBY GIOCATORE (In Attesa) -->
+            <!-- SCHERMATA ONLINE 2B: LOBBY GIOCATORE -->
             <div id="screen-online-lobby-player" class="screen">
+                <!-- Pulsante Esci -->
+                <div class="btn-back-nav" onclick="leaveOnlineRoom()">🚪 ESCI DALLA STANZA</div>
+
                 <header class="app-imperial-header" style="margin-top: 40px;">
                     <div class="logo-wolf-crest">⏳</div>
                     <h1 class="imperial-title" style="font-size: 1.4rem;" id="lobby-narrator-name">Stanza di NARRATORE</h1>
@@ -177,7 +186,6 @@
                 
                 <div class="card-scene" onclick="flipOnlineCard()">
                     <div class="card-3d" id="online-player-card-3d">
-                        <!-- RETRO -->
                         <div class="card-face card-back">
                             <img src="assets/retro.png" onerror="this.classList.add('img-fallback-hidden')" class="card-image-layer" alt="Retro Carta">
                             <div class="card-frame fallback-layer">
@@ -186,7 +194,6 @@
                                 <small class="tap-hint">TOCCA PER RIVELARE</small>
                             </div>
                         </div>
-                        <!-- FRONTE (RUOLO) -->
                         <div class="card-face card-front">
                             <img id="online-card-front-image" src="" onerror="this.classList.add('img-fallback-hidden')" class="card-image-layer" alt="Carta Ruolo">
                             <div class="card-frame fallback-layer">
@@ -210,8 +217,6 @@
                 </p>
             </div>
 
-            <!-- DA QUI IN POI: SCHERMATE LOCALI E DEL NARRATORE GIA' ESISTENTI -->
-            
             <!-- SCHERMATA LOCALE: ASSEGNAZIONE CARTE PASS & PLAY -->
             <div id="screen-distribution-local" class="screen">
                 <div class="dist-header-centered">
@@ -222,7 +227,6 @@
                 
                 <div class="card-scene" onclick="flipCardLocal()">
                     <div class="card-3d" id="player-card-local">
-                        <!-- RETRO DELLA CARTA -->
                         <div class="card-face card-back">
                             <img src="assets/retro.png" onerror="this.classList.add('img-fallback-hidden')" class="card-image-layer" alt="Retro Carta">
                             <div class="card-frame fallback-layer">
@@ -231,7 +235,6 @@
                                 <small class="tap-hint">TOCCA PER RIVELARE</small>
                             </div>
                         </div>
-                        <!-- FACCIA ANTERIORE -->
                         <div class="card-face card-front">
                             <img id="card-front-image-local" src="assets/villico.png" onerror="this.classList.add('img-fallback-hidden')" class="card-image-layer" alt="Carta Ruolo">
                             <div class="card-frame fallback-layer">
@@ -277,8 +280,7 @@
                 </div>
             </div>
 
-            <!-- SCHERMATE DEL NARRATORE (DUSK, NIGHT, DAWN, DAY, VICTORY) RIMANGONO IDENTICHE -->
-            
+            <!-- FASI NARRATORE -->
             <div id="screen-dusk" class="screen">
                 <h2 class="glow-title">Cala la Notte nel Villaggio</h2>
                 <p class="subtitle">Leggi ad alta voce per far chiudere gli occhi a tutti:</p>
@@ -387,6 +389,7 @@
             📜 REGISTRO
         </button>
 
+        <!-- MODALE EMERGENZA -->
         <div id="emergency-modal" class="modal-overlay hidden">
             <div class="modal-card">
                 <h2 class="glow-title" style="font-size:1.3rem;">Menu Regia Narratore</h2>
