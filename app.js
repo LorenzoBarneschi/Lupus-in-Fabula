@@ -20,7 +20,7 @@ try {
 }
 
 // ==========================================
-// 1. DATABASE RUOLI DEFINITIVO
+// 1. DATABASE RUOLI & VARIANTI GRAFICHE
 // ==========================================
 const rolesDB = [
     { id: 'lupo', name: 'Lupo', type: 'multiple', faction: 'Lupi', icon: '🐺', desc: 'Di notte cacci col branco scegliendo all\'unanimità chi sbranare.' },
@@ -40,6 +40,13 @@ const rolesDB = [
     { id: 'amanti', name: 'Amanti', type: 'unique', faction: 'Villici', icon: '❤️', desc: 'Dormono a turno in una casa. Se attaccati lì muoiono entrambi; a casa vuota sopravvivono!' },
     { id: 'villico', name: 'Villico', type: 'multiple', faction: 'Villici', icon: '🌾', desc: 'Nessun potere speciale, ma la tua parola e il tuo voto sono fondamentali.' }
 ];
+
+// Pool Varianti Immagini (puoi aggiungere tutti i file che vuoi nella cartella assets)
+const roleImagePool = {
+    amanti: ['assets/amanti_1.png', 'assets/amanti_2.png'],
+    lupo: ['assets/lupo_1.png', 'assets/lupo_2.png', 'assets/lupo_3.png', 'assets/lupo_4.png', 'assets/lupo.png'],
+    villico: ['assets/villico_1.png', 'assets/villico_2.png', 'assets/villico_3.png', 'assets/villico_4.png', 'assets/villico_5.png', 'assets/villico.png']
+};
 
 // Gerarchia Fissa di Ordinamento per il Registro Narratore
 const HUD_ROLE_ORDER = [
@@ -321,13 +328,36 @@ function validateDeck() {
 }
 
 // ==========================================
-// 5. ASSEGNAZIONE RUOLI (PASS & PLAY)
+// 5. ASSEGNAZIONE RUOLI & GESTIONE VARIANTI IMMAGINI
 // ==========================================
 function startDistribution() {
     gameState.deck = [];
+
+    // Mescola le varianti dei lupi e villici per questa partita
+    const wolvesVariants = [...(roleImagePool.lupo || [])].sort(() => Math.random() - 0.5);
+    const villiciVariants = [...(roleImagePool.villico || [])].sort(() => Math.random() - 0.5);
+    let wolfVarIdx = 0;
+    let villicoVarIdx = 0;
+
     for (const [rId, qty] of Object.entries(gameState.selectedRoles)) {
-        for (let i = 0; i < qty; i++) {
-            gameState.deck.push(rolesDB.find(r => r.id === rId));
+        if (rId === 'amanti' && qty === 2) {
+            // Amanti: 1 Uomo (_1) e 1 Donna (_2) garantiti
+            const roleObj = rolesDB.find(r => r.id === 'amanti');
+            gameState.deck.push({ ...roleObj, cardImage: 'assets/amanti_1.png' });
+            gameState.deck.push({ ...roleObj, cardImage: 'assets/amanti_2.png' });
+        } else {
+            const roleObj = rolesDB.find(r => r.id === rId);
+            for (let i = 0; i < qty; i++) {
+                let imgPath = `assets/${rId}.png`;
+                if (rId === 'lupo' && wolvesVariants.length > 0) {
+                    imgPath = wolvesVariants[wolfVarIdx % wolvesVariants.length];
+                    wolfVarIdx++;
+                } else if (rId === 'villico' && villiciVariants.length > 0) {
+                    imgPath = villiciVariants[villicoVarIdx % villiciVariants.length];
+                    villicoVarIdx++;
+                }
+                gameState.deck.push({ ...roleObj, cardImage: imgPath });
+            }
         }
     }
 
@@ -338,6 +368,7 @@ function startDistribution() {
         id: 'p_' + idx,
         name: name,
         role: shuffledDeck[idx],
+        cardImage: shuffledDeck[idx].cardImage,
         isAlive: true,
         isWolf: shuffledDeck[idx].faction === 'Lupi'
     }));
@@ -365,10 +396,14 @@ function renderDistCard() {
     document.getElementById('dist-pass-text').innerText = `Passa il telefono a ${p.name}.`;
     document.getElementById('dist-tap-text').innerText = `${p.name}, tocca la carta per rivelarla.`;
 
-    // Caricamento Immagine PNG Reale
+    // Caricamento Immagine Dinamica della Variante
     const frontImg = document.getElementById('card-front-image');
     frontImg.classList.remove('img-fallback-hidden');
-    frontImg.src = `assets/${p.role.id}.png`;
+    frontImg.src = p.cardImage;
+    frontImg.onerror = function() {
+        // Fallback automatico al file standard se non trova la variante
+        this.src = `assets/${p.role.id}.png`;
+    };
 
     document.getElementById('card-role-icon').innerText = p.role.icon;
     document.getElementById('card-role-name').innerText = p.role.name.toUpperCase();
@@ -1230,7 +1265,6 @@ function updateNarratorHUD() {
     aliveCount.innerText = living.length;
     wolvesCount.innerText = wolves.length;
 
-    // Ordinamento Rigoroso secondo la Gerarchia richiesta
     const sortedRoster = [...gameState.roster].sort((a, b) => {
         let indexA = HUD_ROLE_ORDER.indexOf(a.role.id);
         let indexB = HUD_ROLE_ORDER.indexOf(b.role.id);
