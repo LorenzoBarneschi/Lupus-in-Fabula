@@ -133,7 +133,7 @@ function cryptoShuffle(array) {
 }
 
 // ==========================================
-// 3. STATO GLOBALE DELLA PARTITA
+// 3. STATO GLOBALE DELLA PARTITA E ONLINE
 // ==========================================
 let gameState = {
     players: [],
@@ -146,118 +146,400 @@ let gameState = {
     nightActions: {},
     abstentions: 0,
     votesMap: {},
-    referendum: {
-        active: false,
-        type: null,
-        candidates: [],
-        votes: {}
-    },
+    referendum: { active: false, type: null, candidates: [], votes: {} },
     history: {
-        lastDamaTarget: null,
-        lastGuardiaTarget: null,
-        lastCensuredTarget: null,
-        lastCiecoPair: null,
-        assassinoKills: 0,
-        assassinoBlocked: false,
-        ciecoUses: 0,
-        monacaUses: 0,
-        alphaKillsUsed: 0
+        lastDamaTarget: null, lastGuardiaTarget: null, lastCensuredTarget: null,
+        lastCiecoPair: null, assassinoKills: 0, assassinoBlocked: false,
+        ciecoUses: 0, monacaUses: 0, alphaKillsUsed: 0
     }
+};
+
+let onlineState = {
+    isOnline: false,
+    isNarrator: false,
+    roomCode: null,
+    playerName: null,
+    unsubscribeRoom: null,
+    unsubscribePlayers: null
 };
 
 let currentDistIndex = 0;
 let isCardRevealed = false;
 
 // ==========================================
-// 4. INIZIALIZZAZIONE & FIRESTORE
+// 4. INIZIALIZZAZIONE & AUTO-RECONNECT
 // ==========================================
 function initApp() {
     renderRolesGrid();
-    loadSavedPlayers();
+    loadSavedPlayersLocal();
     setupSwipeGesture();
+    checkActiveSession();
 }
 
-async function loadSavedPlayers() {
+function selectMode(mode) {
+    gameState.players = [];
+    if (mode === 'local') {
+        onlineState.isOnline = false;
+        switchScreen('screen-setup-local');
+        renderPlayersChipsLocal();
+        validateDeckLocal();
+    } else {
+        onlineState.isOnline = true;
+        switchScreen('screen-online-auth');
+    }
+}
+
+function checkActiveSession() {
+    const stored = localStorage.getItem('lupus_online_session');
+    if (stored) {
+        try {
+            const s = JSON.parse(stored);
+            onlineState.roomCode = s.roomCode;
+            onlineState.playerName = s.playerName;
+            onlineState.isNarrator = s.isNarrator;
+            onlineState.isOnline = true;
+
+            if (s.isNarrator) {
+                db.collection("rooms").doc(s.roomCode).get().then(doc => {
+                    if (doc.exists && doc.data().status === 'waiting') {
+                        document.getElementById('display-room-code').innerText = s.roomCode;
+                        switchScreen('screen-online-lobby-narrator');
+                        listenToRoomPlayers(s.roomCode);
+                    }
+                });
+            } else {
+                db.collection("rooms").doc(s.roomCode).get().then(doc => {
+                    if (doc.exists) {
+                        const status = doc.data().status;
+                        if (status === 'waiting') {
+                            document.getElementById('lobby-narrator-name').innerText = "Stanza di " + doc.data().narrator;
+                            switchScreen('screen-online-lobby-player');
+                            listenToRoomStatus(s.roomCode);
+                            listenToRoomPlayers(s.roomCode);
+                        } else if (status === 'playing') {
+                            listenToRoomStatus(s.roomCode);
+                        }
+                    }
+                });
+            }
+        } catch (e) {}
+    }
+}
+
+// ==========================================
+// 5. MOTORE MULTIPLAYER (ONLINE)
+// ==========================================
+function generateRoomCode() {
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+    let code = '';
+    for(let i=0; i<4; i++) code += chars.charAt(Math.floor(Math.random() * chars.length));
+    return code;
+}
+
+async function createOnlineRoom() {
+    const name = document.getElementById('online-player-name').value.trim();
+    if(!name) { alert("Narratore, inserisci il tuo nome per farti riconoscere!"); return; }
+    
+    const code = generateRoomCode();
+    onlineState.roomCode = code;
+    onlineState.playerName = name;
+    onlineState.isNarrator = true;
+    
+    try {
+        await db.collection("rooms").doc(code).set({
+            status: 'waiting',
+            narrator: name,
+            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        
+        localStorage.setItem('lupus_online_session', JSON.stringify({ roomCode: code, playerName: name, isNarrator: true }));
+        document.getElementById('display-room-code').innerText = code;
+        switchScreen('screen-online-lobby-narrator');
+        listenToRoomPlayers(code);
+    } catch(e) {
+        console.error(e);
+        alert("Errore di connessione ai server!");
+    }
+}
+
+async function joinOnlineRoom() {
+    const name = document.getElementById('online-player-name').value.trim();
+    const code = document.getElementById('online-room-code').value.trim().toUpperCase();
+    
+    if(!name || !code) { alert("Inserisci sia il tuo nome che il codice stanza!"); return; }
+    
+    try {
+        const roomRef = db.collection("rooms").doc(code);
+        const doc = await roomRef.get();
+        
+        if(!doc.exists) { alert("Codice Stanza inesistente!"); return; }
+        if(doc.data().status !== 'waiting') { alert("La partita è già iniziata! Non puoi entrare a metà."); return; }
+        
+        await roomRef.collection("players").doc(name).set({
+            name: name,
+            joinedAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        
+        onlineState.roomCode = code;
+        onlineState.playerName = name;
+        onlineState.isNarrator = false;
+        
+        localStorage.setItem('lupus_online_session', JSON.stringify({ roomCode: code, playerName: name, isNarrator: false }));
+        
+        document.getElementById('lobby-narrator-name').innerText = "Stanza di " + doc.data().narrator;
+        switchScreen('screen-online-lobby-player');
+        
+        listenToRoomStatus(code);
+        listenToRoomPlayers(code);
+        
+    } catch(e) {
+        console.error(e);
+        alert("Errore di connessione alla stanza.");
+    }
+}
+
+function listenToRoomPlayers(code) {
+    if(onlineState.unsubscribePlayers) onlineState.unsubscribePlayers();
+    onlineState.unsubscribePlayers = db.collection("rooms").doc(code).collection("players")
+        .onSnapshot(snap => {
+            gameState.players = [];
+            snap.forEach(doc => gameState.players.push(doc.data().name));
+            
+            if(onlineState.isNarrator) {
+                document.getElementById('online-player-count').innerText = gameState.players.length;
+                const list = document.getElementById('online-players-list');
+                list.innerHTML = gameState.players.map(p => `
+                    <div class="player-chip">
+                        <span>${p}</span>
+                        <span class="remove-btn" onclick="kickPlayerOnline('${p}')">✕</span>
+                    </div>
+                `).join('');
+                validateDeckOnline();
+            } else {
+                document.getElementById('lobby-peers-count').innerText = gameState.players.length;
+                document.getElementById('lobby-peers-list').innerHTML = gameState.players.map(p => `
+                    <div class="player-chip" style="background:#1b2030; border-color:#444; color:#ccc;">
+                        <span>${p}</span>
+                    </div>
+                `).join('');
+            }
+        });
+}
+
+async function kickPlayerOnline(name) {
+    if(confirm(`Vuoi rimuovere ${name} dalla stanza?`)) {
+        try {
+            await db.collection("rooms").doc(onlineState.roomCode).collection("players").doc(name).delete();
+        } catch(e) { console.error(e); }
+    }
+}
+
+function listenToRoomStatus(code) {
+    if(onlineState.unsubscribeRoom) onlineState.unsubscribeRoom();
+    onlineState.unsubscribeRoom = db.collection("rooms").doc(code)
+        .onSnapshot(async snap => {
+            const data = snap.data();
+            if(data && data.status === 'playing') {
+                const myDoc = await db.collection("rooms").doc(code).collection("players").doc(onlineState.playerName).get();
+                if(myDoc.exists) {
+                    showOnlinePlayerCard(myDoc.data());
+                }
+            }
+        });
+}
+
+function showOnlinePlayerCard(data) {
+    switchScreen('screen-online-player-card');
+    document.getElementById('online-my-name').innerText = `IL TUO RUOLO: ${data.role.name.toUpperCase()}`;
+    
+    const frontImg = document.getElementById('online-card-front-image');
+    frontImg.classList.remove('img-fallback-hidden');
+    frontImg.onerror = function() { this.classList.add('img-fallback-hidden'); };
+    frontImg.src = data.cardImage;
+    
+    document.getElementById('online-card-role-icon').innerText = data.role.icon;
+    document.getElementById('online-card-role-name').innerText = data.role.name.toUpperCase();
+    document.getElementById('online-card-role-faction').innerText = `FAZIONE: ${data.role.faction}`;
+    document.getElementById('online-card-role-desc').innerText = data.role.desc;
+}
+
+function flipOnlineCard() {
+    const card = document.getElementById('online-player-card-3d');
+    const btn = document.getElementById('online-btn-flip');
+    
+    if(card.classList.contains('flipped')) {
+        card.classList.remove('flipped');
+        btn.innerHTML = '👁️ SCOPRI CARTA';
+    } else {
+        card.classList.add('flipped');
+        btn.innerHTML = '🙈 COPRI CARTA';
+    }
+}
+
+async function distributeRolesOnline() {
+    gameState.deck = [];
+    const wolvesVariants = cryptoShuffle([...(roleImagePool.lupo || [])]);
+    const villiciVariants = cryptoShuffle([...(roleImagePool.villico || [])]);
+    let wolfVarIdx = 0, villicoVarIdx = 0;
+
+    for (const [rId, qty] of Object.entries(gameState.selectedRoles)) {
+        if (rId === 'amanti' && qty === 2) {
+            const roleObj = rolesDB.find(r => r.id === 'amanti');
+            gameState.deck.push({ ...roleObj, cardImage: 'assets/amanti_1.png' });
+            gameState.deck.push({ ...roleObj, cardImage: 'assets/amanti_2.png' });
+        } else {
+            const roleObj = rolesDB.find(r => r.id === rId);
+            for (let i = 0; i < qty; i++) {
+                let imgPath = `assets/${rId}.png`;
+                if (rId === 'lupo' && wolvesVariants.length > 0) {
+                    imgPath = wolvesVariants[wolfVarIdx % wolvesVariants.length];
+                    wolfVarIdx++;
+                } else if (rId === 'villico' && villiciVariants.length > 0) {
+                    imgPath = villiciVariants[villicoVarIdx % villiciVariants.length];
+                    villicoVarIdx++;
+                }
+                gameState.deck.push({ ...roleObj, cardImage: imgPath });
+            }
+        }
+    }
+
+    const shuffledPlayers = cryptoShuffle([...gameState.players]);
+    const shuffledDeck = cryptoShuffle([...gameState.deck]);
+
+    gameState.roster = shuffledPlayers.map((name, idx) => ({
+        id: 'p_' + idx,
+        name: name,
+        role: shuffledDeck[idx],
+        cardImage: shuffledDeck[idx].cardImage,
+        isAlive: true,
+        isWolf: shuffledDeck[idx].faction === 'Lupi'
+    }));
+
+    try {
+        const batch = db.batch();
+        const roomRef = db.collection("rooms").doc(onlineState.roomCode);
+        
+        gameState.roster.forEach(p => {
+            const pRef = roomRef.collection("players").doc(p.name);
+            batch.update(pRef, { role: p.role, cardImage: p.cardImage });
+        });
+        
+        batch.update(roomRef, { status: 'playing' });
+        await batch.commit();
+
+        narratorStartGame();
+    } catch(e) {
+        console.error(e);
+        alert("Errore nell'invio dei ruoli. Riprova.");
+    }
+}
+
+// ==========================================
+// 6. SETUP LOCALE & GRIGLIA RUOLI
+// ==========================================
+async function loadSavedPlayersLocal() {
     if (db) {
         try {
             const snapshot = await db.collection("players").get();
-            const players = [];
-            snapshot.forEach(doc => players.push(doc.data().name));
-            if (players.length > 0) {
-                renderSavedPlayersList(players);
+            const pArr = [];
+            snapshot.forEach(doc => pArr.push(doc.data().name));
+            if (pArr.length > 0) {
+                renderSavedPlayersListLocal(pArr);
                 return;
             }
-        } catch (e) {
-            console.error("Errore fetch Firestore:", e);
-        }
+        } catch (e) { console.error("Errore fetch Firestore:", e); }
     }
     const local = JSON.parse(localStorage.getItem('lupus_saved_players') || '[]');
-    renderSavedPlayersList(local);
+    renderSavedPlayersListLocal(local);
 }
 
-async function savePlayerCloud(name) {
-    let local = JSON.parse(localStorage.getItem('lupus_saved_players') || '[]');
-    if (!local.includes(name)) {
-        local.push(name);
-        localStorage.setItem('lupus_saved_players', JSON.stringify(local));
+function renderSavedPlayersListLocal(saved) {
+    const box = document.getElementById('saved-players-section-local');
+    const container = document.getElementById('saved-players-chips-local');
+    
+    if (saved.length === 0) {
+        if(box) box.classList.add('hidden');
+        return;
     }
-
-    if (db) {
-        try {
-            await db.collection("players").doc(name).set({ name: name, createdAt: firebase.firestore.FieldValue.serverTimestamp() });
-        } catch (e) {
-            console.error("Errore salvataggio Firestore:", e);
-        }
+    if(box) box.classList.remove('hidden');
+    if(container) {
+        container.innerHTML = saved.map(p => `
+            <div class="saved-chip" onclick="addSavedPlayerLocal('${p}')">
+                <span>+ ${p}</span>
+                <span class="del-mem" onclick="removePlayerCloudLocal('${p}', event)">✕</span>
+            </div>
+        `).join('');
     }
-    loadSavedPlayers();
 }
 
-async function removePlayerCloud(name, e) {
+function addSavedPlayerLocal(name) {
+    if (!gameState.players.includes(name)) {
+        gameState.players.push(name);
+        renderPlayersChipsLocal();
+        validateDeckLocal();
+    }
+}
+
+async function removePlayerCloudLocal(name, e) {
     e.stopPropagation();
     let local = JSON.parse(localStorage.getItem('lupus_saved_players') || '[]').filter(p => p !== name);
     localStorage.setItem('lupus_saved_players', JSON.stringify(local));
 
     if (db) {
-        try {
-            await db.collection("players").doc(name).delete();
-        } catch (e) {
-            console.error("Errore eliminazione Firestore:", e);
-        }
+        try { await db.collection("players").doc(name).delete(); } 
+        catch (e) { console.error("Errore eliminazione Firestore:", e); }
     }
-    loadSavedPlayers();
+    loadSavedPlayersLocal();
 }
 
-function renderSavedPlayersList(saved) {
-    const box = document.getElementById('saved-players-section');
-    const container = document.getElementById('saved-players-chips');
+function addPlayerLocal() {
+    const input = document.getElementById('player-name-local');
+    const name = input.value.trim().replace(/([\u2700-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD10-\uDDFF])/g, '');
+    if (!name) return;
+    if (gameState.players.includes(name)) { alert('Giocatore già inserito!'); return; }
     
-    if (saved.length === 0) {
-        box.classList.add('hidden');
-        return;
+    gameState.players.push(name);
+    
+    // Salva nel cloud per il locale
+    let localSaved = JSON.parse(localStorage.getItem('lupus_saved_players') || '[]');
+    if (!localSaved.includes(name)) {
+        localSaved.push(name);
+        localStorage.setItem('lupus_saved_players', JSON.stringify(localSaved));
     }
-    box.classList.remove('hidden');
-    container.innerHTML = saved.map(p => `
-        <div class="saved-chip" onclick="addSavedPlayer('${p}')">
-            <span>+ ${p}</span>
-            <span class="del-mem" onclick="removePlayerCloud('${p}', event)">✕</span>
+    if (db) db.collection("players").doc(name).set({ name: name, createdAt: firebase.firestore.FieldValue.serverTimestamp() }).catch(()=>{});
+    
+    input.value = '';
+    renderPlayersChipsLocal();
+    validateDeckLocal();
+    loadSavedPlayersLocal();
+}
+
+function removePlayerLocal(name) {
+    gameState.players = gameState.players.filter(p => p !== name);
+    renderPlayersChipsLocal();
+    validateDeckLocal();
+}
+
+function renderPlayersChipsLocal() {
+    const list = document.getElementById('players-list-local');
+    if(!list) return;
+    list.innerHTML = gameState.players.map(p => `
+        <div class="player-chip">
+            <span>${p}</span>
+            <span class="remove-btn" onclick="removePlayerLocal('${p}')">✕</span>
         </div>
     `).join('');
-}
-
-function addSavedPlayer(name) {
-    if (!gameState.players.includes(name)) {
-        gameState.players.push(name);
-        renderPlayersChips();
-        validateDeck();
-    }
+    document.getElementById('player-count-local').innerText = gameState.players.length;
 }
 
 function renderRolesGrid() {
-    const grid = document.getElementById('roles-selection');
-    grid.innerHTML = '';
+    const gridLocal = document.getElementById('roles-selection-local');
+    const gridOnline = document.getElementById('roles-selection-online');
+    
+    let html = '';
     rolesDB.forEach(r => {
-        gameState.selectedRoles[r.id] = 0;
-        grid.innerHTML += `
+        if(gameState.selectedRoles[r.id] === undefined) gameState.selectedRoles[r.id] = 0;
+        html += `
             <div class="role-card-item" id="role-item-${r.id}">
                 <div class="role-info-left">
                     <span class="role-icon-small">${r.icon}</span>
@@ -268,44 +550,15 @@ function renderRolesGrid() {
                 </div>
                 <div class="counter-pill">
                     <button onclick="updateRoleCount('${r.id}', -1)">-</button>
-                    <span id="count-${r.id}">0</span>
+                    <span class="role-count-val" data-role="${r.id}">0</span>
                     <button onclick="updateRoleCount('${r.id}', 1)">+</button>
                 </div>
             </div>
         `;
     });
-}
-
-function addPlayer() {
-    const input = document.getElementById('player-name');
-    const name = input.value.trim();
-    if (!name) return;
-    if (gameState.players.includes(name)) {
-        alert('Giocatore già inserito in questa partita!');
-        return;
-    }
-    gameState.players.push(name);
-    savePlayerCloud(name);
-    input.value = '';
-    renderPlayersChips();
-    validateDeck();
-}
-
-function removePlayer(name) {
-    gameState.players = gameState.players.filter(p => p !== name);
-    renderPlayersChips();
-    validateDeck();
-}
-
-function renderPlayersChips() {
-    const list = document.getElementById('players-list');
-    list.innerHTML = gameState.players.map(p => `
-        <div class="player-chip">
-            <span>${p}</span>
-            <span class="remove-btn" onclick="removePlayer('${p}')">✕</span>
-        </div>
-    `).join('');
-    document.getElementById('player-count').innerText = gameState.players.length;
+    
+    if(gridLocal) gridLocal.innerHTML = html;
+    if(gridOnline) gridOnline.innerHTML = html;
 }
 
 function updateRoleCount(roleId, delta) {
@@ -323,19 +576,24 @@ function updateRoleCount(roleId, delta) {
         if (next >= 0) gameState.selectedRoles[roleId] = next;
     }
 
-    document.getElementById(`count-${roleId}`).innerText = gameState.selectedRoles[roleId];
-    const row = document.getElementById(`role-item-${roleId}`);
-    if (gameState.selectedRoles[roleId] > 0) row.classList.add('selected');
-    else row.classList.remove('selected');
+    document.querySelectorAll(`.role-count-val[data-role="${roleId}"]`).forEach(el => {
+        el.innerText = gameState.selectedRoles[roleId];
+        const row = el.closest('.role-card-item');
+        if(gameState.selectedRoles[roleId] > 0) row.classList.add('selected');
+        else row.classList.remove('selected');
+    });
 
-    validateDeck();
+    validateDeckLocal();
+    validateDeckOnline();
 }
 
-function validateDeck() {
+function validateDeckLocal() {
     const totalDeck = Object.values(gameState.selectedRoles).reduce((a, b) => a + b, 0);
-    document.getElementById('deck-count').innerText = totalDeck;
-    const btn = document.getElementById('btn-start');
+    const countSpan = document.getElementById('deck-count-local');
+    const btn = document.getElementById('btn-start-local');
+    if(!countSpan || !btn) return;
     
+    countSpan.innerText = totalDeck;
     if (gameState.players.length >= 3 && gameState.players.length === totalDeck) {
         btn.disabled = false;
         btn.innerText = `CREA MAZZO E ASSEGNA (${totalDeck} GIOCATORI)`;
@@ -345,16 +603,30 @@ function validateDeck() {
     }
 }
 
-// ==========================================
-// 5. ASSEGNAZIONE RUOLI
-// ==========================================
-function startDistribution() {
-    gameState.deck = [];
+function validateDeckOnline() {
+    const totalDeck = Object.values(gameState.selectedRoles).reduce((a, b) => a + b, 0);
+    const countSpan = document.getElementById('deck-count-online');
+    const btn = document.getElementById('btn-start-online');
+    if(!countSpan || !btn) return;
+    
+    countSpan.innerText = totalDeck;
+    if (gameState.players.length >= 3 && gameState.players.length === totalDeck) {
+        btn.disabled = false;
+        btn.innerText = `DISTRIBUISCI RUOLI ONLINE (${totalDeck} GIOCATORI)`;
+    } else {
+        btn.disabled = true;
+        btn.innerText = `CARTE: ${totalDeck} / GIOCATORI: ${gameState.players.length}`;
+    }
+}
 
+// ==========================================
+// 7. ASSEGNAZIONE LOCALE (PASS & PLAY)
+// ==========================================
+function startDistributionLocal() {
+    gameState.deck = [];
     const wolvesVariants = cryptoShuffle([...(roleImagePool.lupo || [])]);
     const villiciVariants = cryptoShuffle([...(roleImagePool.villico || [])]);
-    let wolfVarIdx = 0;
-    let villicoVarIdx = 0;
+    let wolfVarIdx = 0, villicoVarIdx = 0;
 
     for (const [rId, qty] of Object.entries(gameState.selectedRoles)) {
         if (rId === 'amanti' && qty === 2) {
@@ -396,15 +668,15 @@ function startDistribution() {
     document.getElementById('narrator-control-bar').classList.add('hidden');
     toggleMobileHUD(false);
 
-    switchScreen('screen-distribution');
-    renderDistCard();
+    switchScreen('screen-distribution-local');
+    renderDistCardLocal();
 }
 
-function renderDistCard() {
+function renderDistCardLocal() {
     isCardRevealed = false;
-    document.getElementById('player-card').classList.remove('flipped');
-    document.getElementById('btn-next-player').classList.add('hidden');
-    document.getElementById('card-caption-banner').classList.add('hidden');
+    document.getElementById('player-card-local').classList.remove('flipped');
+    document.getElementById('btn-next-player-local').classList.add('hidden');
+    document.getElementById('card-caption-banner-local').classList.add('hidden');
     
     const p = gameState.roster[currentDistIndex];
     
@@ -412,41 +684,40 @@ function renderDistCard() {
     document.getElementById('dist-pass-text').innerText = `Passa il telefono a ${p.name}.`;
     document.getElementById('dist-tap-text').innerText = `${p.name}, tocca la carta per rivelarla.`;
 
-    const frontImg = document.getElementById('card-front-image');
+    const frontImg = document.getElementById('card-front-image-local');
     frontImg.classList.remove('img-fallback-hidden');
-    
-    frontImg.onerror = function() {
-        this.classList.add('img-fallback-hidden');
-    };
-    
+    frontImg.onerror = function() { this.classList.add('img-fallback-hidden'); };
     frontImg.src = p.cardImage;
 
-    document.getElementById('card-role-icon').innerText = p.role.icon;
-    document.getElementById('card-role-name').innerText = p.role.name.toUpperCase();
-    document.getElementById('card-role-faction').innerText = `FAZIONE: ${p.role.faction}`;
-    document.getElementById('card-role-desc').innerText = p.role.desc;
+    document.getElementById('card-role-icon-local').innerText = p.role.icon;
+    document.getElementById('card-role-name-local').innerText = p.role.name.toUpperCase();
+    document.getElementById('card-role-faction-local').innerText = `FAZIONE: ${p.role.faction}`;
+    document.getElementById('card-role-desc-local').innerText = p.role.desc;
 
-    document.getElementById('caption-role-name').innerText = `${p.role.name.toUpperCase()} ${p.role.icon}`;
+    document.getElementById('caption-role-name-local').innerText = `${p.role.name.toUpperCase()} ${p.role.icon}`;
 }
 
-function flipCard() {
+function flipCardLocal() {
     if (isCardRevealed) return;
-    document.getElementById('player-card').classList.add('flipped');
+    document.getElementById('player-card-local').classList.add('flipped');
     document.getElementById('dist-tap-text').innerText = "Memorizza il ruolo, poi tocca sotto per nascondere.";
-    document.getElementById('btn-next-player').classList.remove('hidden');
-    document.getElementById('card-caption-banner').classList.remove('hidden');
+    document.getElementById('btn-next-player-local').classList.remove('hidden');
+    document.getElementById('card-caption-banner-local').classList.remove('hidden');
     isCardRevealed = true;
 }
 
-function nextPlayerDistribution() {
+function nextPlayerDistributionLocal() {
     currentDistIndex++;
     if (currentDistIndex < gameState.roster.length) {
-        renderDistCard();
+        renderDistCardLocal();
     } else {
         switchScreen('screen-pass-complete');
     }
 }
 
+// ==========================================
+// 8. FASI NARRATORE (DUSK, NIGHT, DAY)
+// ==========================================
 function narratorStartGame() {
     document.getElementById('mobile-hud-btn').classList.remove('hidden');
     document.getElementById('narrator-control-bar').classList.remove('hidden');
@@ -458,28 +729,17 @@ function narratorStartGame() {
 function showDuskTransition() {
     switchScreen('screen-dusk');
     document.getElementById('bar-phase-text').innerText = `NOTTE ${gameState.nightNumber} (IN ARRIVO)`;
-    
     const duskText = getUniqueNarration('dusk');
     document.getElementById('dusk-story-text').innerHTML = `"${duskText}"`;
     updateNarratorHUD();
 }
 
-// ==========================================
-// 6. MOTORE NOTTE
-// ==========================================
 function startNightSteps() {
     gameState.nightActions = {
-        guardiaTarget: null,
-        damaTarget: null,
-        assassinoTarget: null,
-        assassinoRoleGuess: null,
-        wolvesTarget: null,
-        alphaWolfTarget: null,
-        amantiShelter: null,
-        ciecoChoice: [],
-        monacaTarget: null,
-        veggenteTarget: null,
-        mediumTarget: null
+        guardiaTarget: null, damaTarget: null, assassinoTarget: null,
+        assassinoRoleGuess: null, wolvesTarget: null, alphaWolfTarget: null,
+        amantiShelter: null, ciecoChoice: [], monacaTarget: null,
+        veggenteTarget: null, mediumTarget: null
     };
 
     buildNightStepsQueue();
@@ -497,13 +757,8 @@ function buildNightStepsQueue() {
 
     if (livingAmanti.length === 2) {
         steps.push({
-            id: 'amanti_shelter',
-            title: 'CASA DEGLI AMANTI',
-            icon: '❤️',
-            roleId: 'amanti',
-            prompt: gameState.nightNumber === 1 
-                ? 'Gli Amanti si svegliano, si riconoscono e scelgono a casa di chi dormire!'
-                : 'Gli Amanti scelgono in quale delle due case passeranno la notte insieme.'
+            id: 'amanti_shelter', title: 'CASA DEGLI AMANTI', icon: '❤️', roleId: 'amanti',
+            prompt: gameState.nightNumber === 1 ? 'Gli Amanti si svegliano e scelgono a casa di chi dormire!' : 'Gli Amanti scelgono in quale delle due case passeranno la notte insieme.'
         });
     }
 
@@ -511,37 +766,18 @@ function buildNightStepsQueue() {
         steps.push({ id: 'cappuccetto', title: 'CAPPUCCETTO ROSSO', icon: '👧', roleId: 'cappuccetto', prompt: 'Mostra in segreto l\'identità del Lupo indicato dall\'app a Cappuccetto Rosso.' });
     }
 
-    if (hasRole('guardia')) {
-        steps.push({ id: 'guardia', title: 'GUARDIA DEL CORPO', icon: '🛡️', roleId: 'guardia', prompt: 'Chi vuoi sorvegliare stanotte?' });
-    }
-    if (hasRole('dama')) {
-        steps.push({ id: 'dama', title: 'DAMA', icon: '💃', roleId: 'dama', prompt: 'Chi vuoi proteggere nel tuo letto stanotte?' });
-    }
-    if (hasRole('assassino')) {
-        steps.push({ id: 'assassino', title: 'ASSASSINO', icon: '🔪', roleId: 'assassino', prompt: 'Di chi vuoi indovinare il ruolo per sferrare il colpo mortale?' });
-    }
+    if (hasRole('guardia')) steps.push({ id: 'guardia', title: 'GUARDIA DEL CORPO', icon: '🛡️', roleId: 'guardia', prompt: 'Chi vuoi sorvegliare stanotte?' });
+    if (hasRole('dama')) steps.push({ id: 'dama', title: 'DAMA', icon: '💃', roleId: 'dama', prompt: 'Chi vuoi proteggere nel tuo letto stanotte?' });
+    if (hasRole('assassino')) steps.push({ id: 'assassino', title: 'ASSASSINO', icon: '🔪', roleId: 'assassino', prompt: 'Di chi vuoi indovinare il ruolo per sferrare il colpo mortale?' });
     
     steps.push({ id: 'lupi', title: 'BRANCO DEI LUPI', icon: '🐺', roleId: 'lupo', prompt: 'Chi avete deciso all\'unanimità di sbranare stanotte?' });
 
-    if (hasRole('lupo_alpha')) {
-        steps.push({ id: 'lupo_alpha', title: 'LUPO ALPHA (KILL EXTRA)', icon: '🐺👑', roleId: 'lupo_alpha', prompt: 'Vuoi usare il tuo colpo letale autonomo stanotte?' });
-    }
-
-    if (hasRole('cieco')) {
-        steps.push({ id: 'cieco', title: 'CIECO', icon: '👁️', roleId: 'cieco', prompt: 'Indica due persone per scoprire se appartengono alla stessa fazione.' });
-    }
-    if (hasRole('monaca')) {
-        steps.push({ id: 'monaca', title: 'MONACA SILENTE', icon: '🙏', roleId: 'monaca', prompt: 'Chi vuoi proteggere dal rogo di domani?' });
-    }
-    if (hasRole('veggente')) {
-        steps.push({ id: 'veggente', title: 'VEGGENTE', icon: '🔮', roleId: 'veggente', prompt: 'Di chi vuoi scrutare la vera anima?' });
-    }
-    if (gameState.nightNumber > 1 && hasRole('medium')) {
-        steps.push({ id: 'medium', title: 'MEDIUM', icon: '🪦', roleId: 'medium', prompt: 'Di quale anima defunta vuoi conoscere la fazione?' });
-    }
-    if (hasRole('guardia')) {
-        steps.push({ id: 'guardia_feedback', title: 'GUARDIA (RESPONSO)', icon: '🛡️', roleId: 'guardia', prompt: 'Comunica alla Guardia se ha intercettato un attacco.' });
-    }
+    if (hasRole('lupo_alpha')) steps.push({ id: 'lupo_alpha', title: 'LUPO ALPHA', icon: '🐺👑', roleId: 'lupo_alpha', prompt: 'Vuoi usare il tuo colpo letale autonomo stanotte?' });
+    if (hasRole('cieco')) steps.push({ id: 'cieco', title: 'CIECO', icon: '👁️', roleId: 'cieco', prompt: 'Indica due persone per scoprire se appartengono alla stessa fazione.' });
+    if (hasRole('monaca')) steps.push({ id: 'monaca', title: 'MONACA SILENTE', icon: '🙏', roleId: 'monaca', prompt: 'Chi vuoi proteggere dal rogo di domani?' });
+    if (hasRole('veggente')) steps.push({ id: 'veggente', title: 'VEGGENTE', icon: '🔮', roleId: 'veggente', prompt: 'Di chi vuoi scrutare la vera anima?' });
+    if (gameState.nightNumber > 1 && hasRole('medium')) steps.push({ id: 'medium', title: 'MEDIUM', icon: '🪦', roleId: 'medium', prompt: 'Di quale anima defunta vuoi conoscere la fazione?' });
+    if (hasRole('guardia')) steps.push({ id: 'guardia_feedback', title: 'GUARDIA (RESPONSO)', icon: '🛡️', roleId: 'guardia', prompt: 'Comunica alla Guardia se ha intercettato un attacco.' });
 
     gameState.nightSteps = steps;
 }
@@ -757,19 +993,16 @@ function revealMediumGuide(playerId, btn) {
     document.querySelectorAll('.target-btn').forEach(b => b.classList.remove('selected'));
     btn.classList.add('selected');
     const p = gameState.roster.find(pl => pl.id === playerId);
-    
     let cat = '✋ ALTRO (Villico o ruolo speciale)';
     let gesture = '1 DITO';
     if (p.isWolf) { cat = '🐺 LUPO'; gesture = '2 DITA'; }
     if (p.role.id === 'assassino') { cat = '🔪 ASSASSINO'; gesture = '3 DITA'; }
-
     alert(`Responso Medium su ${p.name}:\n\nCategoria: ${cat}\n\nGesto silenzioso da fare al Medium: ${gesture}`);
 }
 
 function checkGuardiaSuccess() {
     if (!gameState.nightActions.guardiaTarget) return null;
     const target = gameState.roster.find(p => p.id === gameState.nightActions.guardiaTarget);
-
     if (gameState.nightActions.wolvesTarget === target.id) {
         const aWolf = gameState.roster.filter(p => p.isWolf && p.isAlive).sort(() => Math.random() - 0.5)[0];
         return { targetName: target.name, attackerName: aWolf ? aWolf.name : 'Sconosciuto' };
@@ -787,19 +1020,10 @@ function checkGuardiaSuccess() {
 
 function submitNightStep() {
     const step = gameState.nightSteps[gameState.currentStepIdx];
-    
-    if (step.id === 'dama') {
-        gameState.history.lastDamaTarget = gameState.nightActions.damaTarget;
-    }
-    if (step.id === 'guardia') {
-        gameState.history.lastGuardiaTarget = gameState.nightActions.guardiaTarget;
-    }
-    if (step.id === 'lupo_alpha' && gameState.nightActions.alphaWolfTarget) {
-        gameState.history.alphaKillsUsed++;
-    }
-    if (step.id === 'monaca' && gameState.nightActions.monacaTarget) {
-        gameState.history.monacaUses++;
-    }
+    if (step.id === 'dama') gameState.history.lastDamaTarget = gameState.nightActions.damaTarget;
+    if (step.id === 'guardia') gameState.history.lastGuardiaTarget = gameState.nightActions.guardiaTarget;
+    if (step.id === 'lupo_alpha' && gameState.nightActions.alphaWolfTarget) gameState.history.alphaKillsUsed++;
+    if (step.id === 'monaca' && gameState.nightActions.monacaTarget) gameState.history.monacaUses++;
 
     gameState.currentStepIdx++;
     if (gameState.currentStepIdx < gameState.nightSteps.length) {
@@ -810,7 +1034,7 @@ function submitNightStep() {
 }
 
 // ==========================================
-// 7. CALCOLO ESITI NOTTE & ALBA
+// 9. ESITI NOTTE & ALBA
 // ==========================================
 function resolveNightOutcomes() {
     let deathsThisNight = [];
@@ -826,7 +1050,6 @@ function resolveNightOutcomes() {
     function handleWolfAttack(target) {
         if (!target) return;
         const isProtected = (target.id === damaProt || target.id === guardiaProt);
-        
         if (target.role.id === 'amanti') {
             if (target.id === amantiShelterId) {
                 if (!isProtected) {
@@ -862,22 +1085,16 @@ function resolveNightOutcomes() {
         const guess = gameState.nightActions.assassinoRoleGuess;
         const isProtected = (aTarget.id === damaProt || aTarget.id === guardiaProt);
 
-        // Se l'Assassino indovina la professione...
         if (aTarget.role.id === guess) {
-            
-            // Ha indovinato! Quindi NON viene bloccato la notte successiva.
             gameState.history.assassinoBlocked = false;
-            
             let inHome = true;
             if (aTarget.role.id === 'amanti' && aTarget.id !== amantiShelterId) inHome = false;
 
             if (inHome) {
-                // Prende il punto solo se la vittima non è stata protetta
                 if (!isProtected) {
                     gameState.history.assassinoKills++;
                     if (!deathsThisNight.some(d => d.player.id === aTarget.id)) {
                         deathsThisNight.push({ player: aTarget, reason: 'assassin' });
-                        // Logica appestato in caso di kill dell'assassino
                         if (aTarget.role.id === 'appestato') {
                             plagueTriggered = true;
                             const assassinPlayer = gameState.roster.find(p => p.role.id === 'assassino');
@@ -889,7 +1106,6 @@ function resolveNightOutcomes() {
                 }
             }
         } else {
-            // Non ha indovinato! Niente punto, niente kill, e viene BLOCCATO.
             gameState.history.assassinoBlocked = true;
         }
     } else {
@@ -904,7 +1120,6 @@ function resolveNightOutcomes() {
     }
 
     deathsThisNight.forEach(d => d.player.isAlive = false);
-
     buildDawnScreen(deathsThisNight, transformedLycan, plagueTriggered);
     updateNarratorHUD();
 }
@@ -916,23 +1131,15 @@ function buildDawnScreen(deaths, transformedLycan, plagueTriggered) {
     const summary = document.getElementById('dawn-summary-box');
 
     let text = '';
-    if (deaths.length === 0) {
-        text = getUniqueNarration('dawnPeace');
-    } else if (deaths.length === 1) {
-        let template = getUniqueNarration('dawnSingleDeath');
-        text = template.replace('{DEAD}', `<strong>${deaths[0].player.name}</strong>`);
-    } else {
+    if (deaths.length === 0) text = getUniqueNarration('dawnPeace');
+    else if (deaths.length === 1) text = getUniqueNarration('dawnSingleDeath').replace('{DEAD}', `<strong>${deaths[0].player.name}</strong>`);
+    else {
         const deadNames = deaths.map(d => `<strong>${d.player.name}</strong>`).join(' e ');
-        let template = getUniqueNarration('dawnMultiDeath');
-        text = template.replace('{DEAD}', deadNames);
+        text = getUniqueNarration('dawnMultiDeath').replace('{DEAD}', deadNames);
     }
 
-    if (plagueTriggered) {
-        text += `<br><br><span style="color:#ff5555;">☣️ ${NARRATION_MASTER_LIB.dawnPlague[0]}</span>`;
-    }
-    if (transformedLycan) {
-        text += `<br><br><span style="color:#ffaa00;">🌕 ${NARRATION_MASTER_LIB.dawnLycan[0]}</span>`;
-    }
+    if (plagueTriggered) text += `<br><br><span style="color:#ff5555;">☣️ ${NARRATION_MASTER_LIB.dawnPlague[0]}</span>`;
+    if (transformedLycan) text += `<br><br><span style="color:#ffaa00;">🌕 ${NARRATION_MASTER_LIB.dawnLycan[0]}</span>`;
 
     prose.innerHTML = `"${text}"`;
     summary.innerHTML = deaths.length === 0 
@@ -943,7 +1150,7 @@ function buildDawnScreen(deaths, transformedLycan, plagueTriggered) {
 }
 
 // ==========================================
-// 8. GIORNO, VOTI, CENSURATORE & REFERENDUM
+// 10. GIORNO, VOTI & REFERENDUM
 // ==========================================
 function startDayDiscussion() {
     switchScreen('screen-day');
@@ -970,9 +1177,7 @@ function startDayDiscussion() {
 function renderVotingGrid() {
     const grid = document.getElementById('voting-grid');
     grid.innerHTML = '';
-    const living = gameState.roster.filter(p => p.isAlive);
-
-    living.forEach(p => {
+    gameState.roster.filter(p => p.isAlive).forEach(p => {
         gameState.votesMap[p.id] = 0;
         grid.innerHTML += `
             <div class="vote-row">
@@ -1003,29 +1208,21 @@ function openCensoreModal() {
     const living = gameState.roster.filter(p => p.isAlive);
     let options = living.map(p => {
         const isBlocked = (p.id === gameState.history.lastCensuredTarget);
-        return `${p.name} (Voti attuali: ${gameState.votesMap[p.id] || 0})${isBlocked ? ' [BLOCCATO]' : ''}`;
+        return `${p.name} (Voti: ${gameState.votesMap[p.id] || 0})${isBlocked ? ' [BLOCCATO]' : ''}`;
     }).join('\n- ');
 
-    const choice = prompt(`Tutti chiudono gli occhi. Chiedi al Censuratore a chi togliere 1 voto:\n\n- ${options}\n\nDigita il NOME esatto del giocatore da censurare (oppure lascia vuoto per non agire):`);
-    
+    const choice = prompt(`Chiedi al Censuratore a chi togliere 1 voto:\n\n- ${options}\n\nDigita il NOME esatto:`);
     if (choice) {
         const target = living.find(p => p.name.toLowerCase() === choice.trim().toLowerCase());
         if (target) {
-            if (target.id === gameState.history.lastCensuredTarget) {
-                alert('Non puoi censurare la stessa persona per due turni consecutivi!');
-                return;
-            }
+            if (target.id === gameState.history.lastCensuredTarget) { alert('Non può censurare la stessa persona per due turni di fila!'); return; }
             if ((gameState.votesMap[target.id] || 0) > 0) {
                 gameState.votesMap[target.id]--;
                 document.getElementById(`vote-${target.id}`).innerText = gameState.votesMap[target.id];
                 gameState.history.lastCensuredTarget = target.id;
                 alert(`Voto annullato! I voti di ${target.name} scendono a ${gameState.votesMap[target.id]}.`);
-            } else {
-                alert(`${target.name} non aveva voti da togliere.`);
-            }
-        } else {
-            alert('Nome non trovato.');
-        }
+            } else { alert(`${target.name} non aveva voti da togliere.`); }
+        } else { alert('Nome non trovato.'); }
     }
 }
 
@@ -1036,35 +1233,15 @@ function processDayVotes() {
 
     living.forEach(p => {
         let v = gameState.votesMap[p.id] || 0;
-        if (v > maxVotes) {
-            maxVotes = v;
-            topPlayers = [p];
-        } else if (v === maxVotes && maxVotes > 0) {
-            topPlayers.push(p);
-        }
+        if (v > maxVotes) { maxVotes = v; topPlayers = [p]; } 
+        else if (v === maxVotes && maxVotes > 0) { topPlayers.push(p); }
     });
 
-    if (maxVotes === 0) {
-        alert(getUniqueNarration('rogoReprieve'));
-        endDayPhase();
-        return;
-    }
+    if (maxVotes === 0) { alert(getUniqueNarration('rogoReprieve')); endDayPhase(); return; }
+    if (gameState.abstentions > maxVotes) { alert(`Astenuti (${gameState.abstentions}) superano voti (${maxVotes}). Nessun rogo!`); endDayPhase(); return; }
 
-    if (gameState.abstentions > maxVotes) {
-        alert(`Gli astenuti (${gameState.abstentions}) superano i voti sul sospettato (${maxVotes}). Nessuno viene mandato al rogo!`);
-        endDayPhase();
-        return;
-    }
-
-    if (topPlayers.length === 1 && maxVotes === gameState.abstentions) {
-        startReferendumCondemn(topPlayers[0]);
-        return;
-    }
-
-    if (topPlayers.length > 1) {
-        startReferendumTie(topPlayers);
-        return;
-    }
+    if (topPlayers.length === 1 && maxVotes === gameState.abstentions) { startReferendumCondemn(topPlayers[0]); return; }
+    if (topPlayers.length > 1) { startReferendumTie(topPlayers); return; }
 
     condemnToRogo(topPlayers[0]);
 }
@@ -1077,7 +1254,6 @@ function startReferendumTie(candidates) {
 
     document.getElementById('standard-voting-view').classList.add('hidden');
     document.getElementById('referendum-view').classList.remove('hidden');
-
     document.getElementById('day-screen-title').innerText = '⚖️ REFERENDUM DI SPAREGGIO';
     document.getElementById('day-screen-subtitle').innerText = 'I candidati non votano. Il villaggio deve scegliere chi eliminare!';
 
@@ -1110,15 +1286,13 @@ function startReferendumCondemn(accused) {
 
     document.getElementById('standard-voting-view').classList.add('hidden');
     document.getElementById('referendum-view').classList.remove('hidden');
-
     document.getElementById('day-screen-title').innerText = '⚖️ REFERENDUM DI CONDANNA';
     document.getElementById('day-screen-subtitle').innerText = `${accused.name} non vota. Il villaggio decide tra ELIMINARE o GRAZIARE.`;
 
     let intro = getUniqueNarration('referendumCondemnIntro');
     document.getElementById('referendum-intro-text').innerHTML = `"${intro.replace('{NAME}', `<strong>${accused.name}</strong>`)}"`;
 
-    const grid = document.getElementById('referendum-voting-grid');
-    grid.innerHTML = `
+    document.getElementById('referendum-voting-grid').innerHTML = `
         <div class="vote-row">
             <span>🔥 <strong>ELIMINA ${accused.name}</strong></span>
             <div class="counter-pill">
@@ -1146,31 +1320,22 @@ function changeReferendumVote(key, delta) {
 
 function processReferendumVotes() {
     if (gameState.referendum.type === 'tie') {
-        let maxV = -1;
-        let winners = [];
+        let maxV = -1, winners = [];
         gameState.referendum.candidates.forEach(c => {
             let v = gameState.referendum.votes[c.id] || 0;
             if (v > maxV) { maxV = v; winners = [c]; }
             else if (v === maxV && maxV > 0) { winners.push(c); }
         });
 
-        if (maxV === 0 || winners.length > 1) {
-            alert('Anche il Referendum è finito in parità! Nessun rogo viene eseguito oggi.');
-            endDayPhase();
-        } else {
-            condemnToRogo(winners[0]);
-        }
+        if (maxV === 0 || winners.length > 1) { alert('Pareggio! Nessun rogo eseguito oggi.'); endDayPhase(); } 
+        else { condemnToRogo(winners[0]); }
     } else if (gameState.referendum.type === 'condemn') {
         const burnVotes = gameState.referendum.votes['burn'] || 0;
         const saveVotes = gameState.referendum.votes['save'] || 0;
         const accused = gameState.referendum.candidates[0];
 
-        if (burnVotes > saveVotes) {
-            condemnToRogo(accused);
-        } else {
-            alert(`Il villaggio ha scelto di graziare ${accused.name}! Nessuna morte sul rogo.`);
-            endDayPhase();
-        }
+        if (burnVotes > saveVotes) condemnToRogo(accused);
+        else { alert(`Il villaggio ha scelto di graziare ${accused.name}! Nessuna morte sul rogo.`); endDayPhase(); }
     }
 }
 
@@ -1182,8 +1347,7 @@ function condemnToRogo(condemned) {
     }
 
     condemned.isAlive = false;
-    let template = getUniqueNarration('rogoCondemn');
-    alert(template.replace('{NAME}', condemned.name));
+    alert(getUniqueNarration('rogoCondemn').replace('{NAME}', condemned.name));
 
     if (condemned.role.id === 'pazzo') {
         showVictory('pazzo', `Il Pazzo (${condemned.name}) è riuscito a farsi bruciare sul Rogo! Vince la partita da solo all'istante!`);
@@ -1201,14 +1365,13 @@ function endDayPhase() {
 }
 
 // ==========================================
-// 9. VITTORIA MAESTOSA
+// 11. VITTORIA MAESTOSA
 // ==========================================
 function checkVictoryConditions() {
     const living = gameState.roster.filter(p => p.isAlive);
     const wolvesLiving = living.filter(p => p.isWolf).length;
     const assassinLiving = living.some(p => p.role.id === 'assassino');
 
-    // FIX MATEMATICA ASSASSINO: 6-8->2, 9-12->3, 13+->4
     let requiredKills = 2;
     if (gameState.players.length >= 9 && gameState.players.length <= 12) requiredKills = 3;
     if (gameState.players.length >= 13) requiredKills = 4;
@@ -1237,6 +1400,8 @@ function showVictory(faction, storyText) {
     document.getElementById('narrator-hud').classList.remove('open');
     document.getElementById('mobile-hud-btn').classList.add('hidden');
     toggleMobileHUD(false);
+    
+    localStorage.removeItem('lupus_online_session');
 
     const title = document.getElementById('victory-title');
     const icon = document.getElementById('victory-icon');
@@ -1266,15 +1431,10 @@ function showVictory(faction, storyText) {
 }
 
 // ==========================================
-// 10. MODALE REGIA & INTERRUZIONE
+// 12. REGIA MANUALE & HUD NARRATORE
 // ==========================================
-function openEmergencyModal() {
-    document.getElementById('emergency-modal').classList.remove('hidden');
-}
-
-function closeEmergencyModal() {
-    document.getElementById('emergency-modal').classList.add('hidden');
-}
+function openEmergencyModal() { document.getElementById('emergency-modal').classList.remove('hidden'); }
+function closeEmergencyModal() { document.getElementById('emergency-modal').classList.add('hidden'); }
 
 function forceVictory(faction) {
     closeEmergencyModal();
@@ -1282,19 +1442,21 @@ function forceVictory(faction) {
 }
 
 function abortGameConfirm() {
-    if (confirm("Sei sicuro di voler interrompere la partita attuale e tornare alla schermata di preparazione?")) {
+    if (confirm("Sei sicuro di voler interrompere la partita attuale e tornare al menu iniziale?")) {
         closeEmergencyModal();
         document.getElementById('narrator-control-bar').classList.add('hidden');
         document.getElementById('narrator-hud').classList.remove('open');
         document.getElementById('mobile-hud-btn').classList.add('hidden');
         toggleMobileHUD(false);
-        switchScreen('screen-setup');
+        
+        localStorage.removeItem('lupus_online_session');
+        if(onlineState.unsubscribeRoom) onlineState.unsubscribeRoom();
+        if(onlineState.unsubscribePlayers) onlineState.unsubscribePlayers();
+        
+        switchScreen('screen-home');
     }
 }
 
-// ==========================================
-// 11. HUD NARRATORE (TRACKER ASSASSINO & SWIPE REALE)
-// ==========================================
 function updateNarratorHUD() {
     const list = document.getElementById('hud-roster-list');
     const aliveCount = document.getElementById('hud-alive-count');
@@ -1310,7 +1472,6 @@ function updateNarratorHUD() {
     aliveCount.innerText = living.length;
     wolvesCount.innerText = wolves.length;
 
-    // Gestione Tracker Assassino nel Registro
     const hasAssassin = gameState.roster.some(p => p.role.id === 'assassino');
     if (hasAssassin) {
         assassinTrackerBox.classList.remove('hidden');
@@ -1365,7 +1526,6 @@ function toggleMobileHUD(forceState) {
     }
 }
 
-// Swipe fluido per chiudere il cassetto senza muovere lo sfondo
 function setupSwipeGesture() {
     const hud = document.getElementById('narrator-hud');
     let touchStartX = 0;
@@ -1377,7 +1537,6 @@ function setupSwipeGesture() {
 
     hud.addEventListener('touchmove', (e) => {
         e.preventDefault(); 
-        
         touchCurrentX = e.touches[0].clientX;
         let deltaX = touchCurrentX - touchStartX;
         
@@ -1404,5 +1563,5 @@ function switchScreen(screenId) {
     window.scrollTo(0, 0);
 }
 
-// Avvio
+// Avvio App
 initApp();

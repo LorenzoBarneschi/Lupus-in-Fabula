@@ -31,53 +31,197 @@
                 <button class="btn-emergency" onclick="openEmergencyModal()">⚙️ REGIA / STOP</button>
             </div>
 
-            <!-- SCHERMATA 1: SETUP -->
-            <div id="screen-setup" class="screen active">
-                <header class="app-imperial-header">
+            <!-- SCHERMATA 0: MENU PRINCIPALE (SCELTA MODALITA') -->
+            <div id="screen-home" class="screen active">
+                <header class="app-imperial-header" style="margin-top: 20px;">
                     <div class="logo-wolf-crest">🐺</div>
                     <h1 class="imperial-title">LUPUS IN FABULA</h1>
                     <div class="title-separator"><span>✦</span> ✦ <span>✦</span></div>
-                    <p class="subtitle">MOTORE DI REGIA PER IL NARRATORE</p>
+                    <p class="subtitle">IL VILLAGGIO ATTENDE IL SUO DESTINO</p>
                 </header>
-                
-                <div class="player-input-card">
-                    <input type="text" id="player-name" placeholder="Nome Giocatore..." onkeypress="if(event.key==='Enter') addPlayer()">
-                    <button onclick="addPlayer()" class="btn-gold-action">AGGIUNGI</button>
-                </div>
 
-                <!-- Giocatori in Memoria (Sincronizzati Cloud) -->
-                <div id="saved-players-section" class="saved-players-box hidden">
-                    <span class="saved-label">⚡ GIOCATORI FREQUENTI (CLOUD):</span>
-                    <div id="saved-players-chips" class="saved-chips-list"></div>
-                </div>
-                
-                <div class="players-badge-list" id="players-list"></div>
-                
-                <div class="deck-status-bar">
-                    <div>Giocatori: <strong id="player-count">0</strong></div>
-                    <div>Carte Mazzo: <strong id="deck-count">0</strong></div>
-                </div>
-
-                <div class="roles-grid" id="roles-selection"></div>
-
-                <!-- Contenitore Sticky per il Pulsante Fisso in Basso -->
-                <div class="sticky-footer-btn-container">
-                    <button onclick="startDistribution()" class="btn-gold-huge" id="btn-start" disabled>
-                        CREA IL MAZZO E ASSEGNA
+                <div class="center-btn-wrapper" style="flex-direction: column; gap: 20px; margin-top: 30px;">
+                    <button class="btn-gold-huge" onclick="selectMode('online')">
+                        🌐 GIOCA ONLINE (STANZA CONDIVISA)
+                        <small style="display:block; font-size:0.75rem; color:#333; margin-top:4px;">Ognuno vede il ruolo dal proprio telefono</small>
+                    </button>
+                    
+                    <button class="btn-gold-action" style="padding: 16px; font-size:1rem;" onclick="selectMode('local')">
+                        📱 MODALITÀ CLASSICA LOCALE
+                        <small style="display:block; font-size:0.75rem; color:#222; margin-top:4px;">Un solo telefono da passarsi di mano in mano</small>
                     </button>
                 </div>
             </div>
 
-            <!-- SCHERMATA 2: ASSEGNAZIONE CARTE -->
-            <div id="screen-distribution" class="screen">
+            <!-- SCHERMATA 1 (LOCALE): SETUP TRADIZIONALE -->
+            <div id="screen-setup-local" class="screen">
+                <header class="app-imperial-header">
+                    <h1 class="imperial-title" style="font-size: 1.4rem;">MODALITÀ LOCALE</h1>
+                    <div class="title-separator"><span>✦</span></div>
+                </header>
+                
+                <div class="player-input-card">
+                    <input type="text" id="player-name-local" placeholder="Nome Giocatore..." onkeypress="if(event.key==='Enter') addPlayerLocal()">
+                    <button onclick="addPlayerLocal()" class="btn-gold-action">AGGIUNGI</button>
+                </div>
+
+                <div id="saved-players-section-local" class="saved-players-box hidden">
+                    <span class="saved-label">⚡ GIOCATORI FREQUENTI (CLOUD):</span>
+                    <div id="saved-players-chips-local" class="saved-chips-list"></div>
+                </div>
+                
+                <div class="players-badge-list" id="players-list-local"></div>
+                
+                <div class="deck-status-bar">
+                    <div>Giocatori: <strong id="player-count-local">0</strong></div>
+                    <div>Carte Mazzo: <strong id="deck-count-local">0</strong></div>
+                </div>
+
+                <div class="roles-grid" id="roles-selection-local"></div>
+
+                <div class="sticky-footer-btn-container">
+                    <button onclick="startDistributionLocal()" class="btn-gold-huge" id="btn-start-local" disabled>
+                        CREA MAZZO E ASSEGNA
+                    </button>
+                </div>
+            </div>
+
+            <!-- SCHERMATA ONLINE 1: AUTENTICAZIONE E SCELTA (CREA O ENTRA) -->
+            <div id="screen-online-auth" class="screen">
+                <header class="app-imperial-header">
+                    <h1 class="imperial-title" style="font-size: 1.4rem;">PORTALE DEL VILLAGGIO</h1>
+                    <div class="title-separator"><span>✦</span></div>
+                    <p class="subtitle">Identificati per entrare</p>
+                </header>
+
+                <div class="prose-card" style="padding: 15px; margin-bottom: 25px;">
+                    <label style="display:block; color:var(--gold); font-family:'Cinzel', serif; font-size:0.9rem; margin-bottom:8px; text-align:left;">IL TUO NOME (Senza Emoji):</label>
+                    <div class="player-input-card" style="margin-bottom:0;">
+                        <!-- Oninput per bloccare le emoji in tempo reale -->
+                        <input type="text" id="online-player-name" placeholder="Inserisci il tuo vero nome..." oninput="this.value = this.value.replace(/([\u2700-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD10-\uDDFF])/g, '');">
+                    </div>
+                </div>
+
+                <div class="center-btn-wrapper" style="flex-direction: column; gap: 15px;">
+                    <!-- Pulsante per chi fa il Narratore -->
+                    <button class="btn-blood-huge" onclick="createOnlineRoom()">
+                        👑 CREA STANZA (FAI IL NARRATORE)
+                    </button>
+                    
+                    <div style="text-align:center; color:var(--text-muted); font-size:0.8rem; margin: 10px 0;">OPPURE</div>
+
+                    <!-- Sezione per chi entra come Giocatore -->
+                    <div class="player-input-card">
+                        <input type="text" id="online-room-code" placeholder="Codice Stanza (es. LUPO)" style="text-transform: uppercase;" maxlength="6" onkeypress="if(event.key==='Enter') joinOnlineRoom()">
+                        <button onclick="joinOnlineRoom()" class="btn-gold-action">ENTRA</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SCHERMATA ONLINE 2A: LOBBY NARRATORE (Seleziona Ruoli) -->
+            <div id="screen-online-lobby-narrator" class="screen">
+                <header class="app-imperial-header">
+                    <h1 class="imperial-title" style="font-size: 1.2rem; color: #ff5555;">SALA DEL NARRATORE</h1>
+                    <div class="title-separator"><span>✦</span></div>
+                    <div style="background:var(--card-dark); border:1px solid var(--gold); border-radius:8px; padding:10px; margin-bottom:15px;">
+                        <span style="font-size:0.8rem; color:var(--text-muted); text-transform:uppercase;">Codice Stanza:</span><br>
+                        <strong id="display-room-code" style="font-size: 2rem; color:var(--gold-bright); letter-spacing: 4px;">----</strong>
+                    </div>
+                </header>
+
+                <div style="margin-bottom: 15px; font-family:'Cinzel', serif; font-size:0.9rem; color:var(--gold);">
+                    Giocatori Connessi (<span id="online-player-count">0</span>):
+                </div>
+                <div class="players-badge-list" id="online-players-list"></div>
+
+                <div class="deck-status-bar" style="margin-top: 10px;">
+                    <div>Carte Selezionate: <strong id="deck-count-online">0</strong></div>
+                </div>
+
+                <div class="roles-grid" id="roles-selection-online"></div>
+
+                <div class="sticky-footer-btn-container">
+                    <button onclick="distributeRolesOnline()" class="btn-blood-huge" id="btn-start-online" disabled>
+                        DISTRIBUISCI RUOLI ONLINE
+                    </button>
+                </div>
+            </div>
+
+            <!-- SCHERMATA ONLINE 2B: LOBBY GIOCATORE (In Attesa) -->
+            <div id="screen-online-lobby-player" class="screen">
+                <header class="app-imperial-header" style="margin-top: 40px;">
+                    <div class="logo-wolf-crest">⏳</div>
+                    <h1 class="imperial-title" style="font-size: 1.4rem;" id="lobby-narrator-name">Stanza di NARRATORE</h1>
+                    <div class="title-separator"><span>✦</span></div>
+                    <p class="subtitle">In attesa del destino...</p>
+                </header>
+
+                <div class="prose-card" style="margin-top:30px;">
+                    "Siedi in silenzio attorno al fuoco. Quando il Narratore distribuirà i ruoli, la tua carta segreta apparirà magicamente qui."
+                </div>
+
+                <div style="margin-top: 30px; text-align:center;">
+                    <div style="font-family:'Cinzel', serif; font-size:0.9rem; color:var(--gold); margin-bottom:10px;">
+                        I tuoi compagni (<span id="lobby-peers-count">0</span>):
+                    </div>
+                    <div class="players-badge-list" style="justify-content:center;" id="lobby-peers-list"></div>
+                </div>
+            </div>
+
+            <!-- SCHERMATA ONLINE 3: VISTA CARTA DEL GIOCATORE (Gira Infinito) -->
+            <div id="screen-online-player-card" class="screen">
+                <div class="dist-header-centered">
+                    <h2 class="glow-title" id="online-my-name">IL TUO RUOLO</h2>
+                    <p class="dist-sub-highlight">Tocca la carta per scoprire e nascondere chi sei.</p>
+                </div>
+                
+                <div class="card-scene" onclick="flipOnlineCard()">
+                    <div class="card-3d" id="online-player-card-3d">
+                        <!-- RETRO -->
+                        <div class="card-face card-back">
+                            <img src="assets/retro.png" onerror="this.classList.add('img-fallback-hidden')" class="card-image-layer" alt="Retro Carta">
+                            <div class="card-frame fallback-layer">
+                                <div class="card-inner-icon">🐺</div>
+                                <span class="card-back-text">LUPUS IN FABULA</span>
+                                <small class="tap-hint">TOCCA PER RIVELARE</small>
+                            </div>
+                        </div>
+                        <!-- FRONTE (RUOLO) -->
+                        <div class="card-face card-front">
+                            <img id="online-card-front-image" src="" onerror="this.classList.add('img-fallback-hidden')" class="card-image-layer" alt="Carta Ruolo">
+                            <div class="card-frame fallback-layer">
+                                <div class="card-role-icon" id="online-card-role-icon">🌾</div>
+                                <h3 id="online-card-role-name">VILLICO</h3>
+                                <div class="role-faction-badge" id="online-card-role-faction">Fazione Villici</div>
+                                <p class="role-short-desc" id="online-card-role-desc">Descrizione</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="center-btn-wrapper" style="margin-top: 25px;">
+                    <button onclick="flipOnlineCard()" class="btn-gold-action" id="online-btn-flip" style="width: 100%; max-width: 280px; padding: 16px; font-size: 1.1rem;">
+                        👁️ SCOPRI CARTA
+                    </button>
+                </div>
+                
+                <p style="text-align:center; font-size:0.8rem; color:#666; margin-top:20px;">
+                    (Se chiudi Safari, riapri il link per ritrovare la tua carta)
+                </p>
+            </div>
+
+            <!-- DA QUI IN POI: SCHERMATE LOCALI E DEL NARRATORE GIA' ESISTENTI -->
+            
+            <!-- SCHERMATA LOCALE: ASSEGNAZIONE CARTE PASS & PLAY -->
+            <div id="screen-distribution-local" class="screen">
                 <div class="dist-header-centered">
                     <h2 id="dist-player-name" class="glow-title">TURNO DI: GIOCATORE</h2>
                     <p id="dist-pass-text" class="dist-sub-line">Passa il telefono.</p>
                     <p id="dist-tap-text" class="dist-sub-highlight">Tocca la carta per rivelarla.</p>
                 </div>
                 
-                <div class="card-scene" onclick="flipCard()">
-                    <div class="card-3d" id="player-card">
+                <div class="card-scene" onclick="flipCardLocal()">
+                    <div class="card-3d" id="player-card-local">
                         <!-- RETRO DELLA CARTA -->
                         <div class="card-face card-back">
                             <img src="assets/retro.png" onerror="this.classList.add('img-fallback-hidden')" class="card-image-layer" alt="Retro Carta">
@@ -89,30 +233,29 @@
                         </div>
                         <!-- FACCIA ANTERIORE -->
                         <div class="card-face card-front">
-                            <img id="card-front-image" src="assets/villico.png" onerror="this.classList.add('img-fallback-hidden')" class="card-image-layer" alt="Carta Ruolo">
-                            <div class="card-frame fallback-layer" id="card-front-frame">
-                                <div class="card-role-icon" id="card-role-icon">🌾</div>
-                                <h3 id="card-role-name">VILLICO</h3>
-                                <div class="role-faction-badge" id="card-role-faction">Fazione Villici</div>
-                                <p class="role-short-desc" id="card-role-desc">Descrizione</p>
+                            <img id="card-front-image-local" src="assets/villico.png" onerror="this.classList.add('img-fallback-hidden')" class="card-image-layer" alt="Carta Ruolo">
+                            <div class="card-frame fallback-layer">
+                                <div class="card-role-icon" id="card-role-icon-local">🌾</div>
+                                <h3 id="card-role-name-local">VILLICO</h3>
+                                <div class="role-faction-badge" id="card-role-faction-local">Fazione Villici</div>
+                                <p class="role-short-desc" id="card-role-desc-local">Descrizione</p>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Didascalia di chiarezza sotto la carta -->
-                <div class="card-caption-banner hidden" id="card-caption-banner">
-                    Il tuo ruolo è: <strong id="caption-role-name">VILLICO 🌾</strong>
+                <div class="card-caption-banner hidden" id="card-caption-banner-local">
+                    Il tuo ruolo è: <strong id="caption-role-name-local">VILLICO 🌾</strong>
                 </div>
 
                 <div class="center-btn-wrapper">
-                    <button onclick="nextPlayerDistribution()" class="btn-gold-action hidden" id="btn-next-player">
+                    <button onclick="nextPlayerDistributionLocal()" class="btn-gold-action hidden" id="btn-next-player-local">
                         HO MEMORIZZATO • NASCONDI
                     </button>
                 </div>
             </div>
 
-            <!-- SCHERMATA 2.5: ASSEGNAZIONE COMPLETATA (CON CARTA NARRATORE) -->
+            <!-- SCHERMATA LOCALE: ASSEGNAZIONE COMPLETATA -->
             <div id="screen-pass-complete" class="screen">
                 <h2 class="glow-title">Tutte le Carte Assegnate</h2>
                 <p class="subtitle">Schermata protetta per il passaggio</p>
@@ -134,67 +277,51 @@
                 </div>
             </div>
 
-            <!-- SCHERMATA 3: TRANSIZIONE NOTTE (CON PAESAGGIO) -->
+            <!-- SCHERMATE DEL NARRATORE (DUSK, NIGHT, DAWN, DAY, VICTORY) RIMANGONO IDENTICHE -->
+            
             <div id="screen-dusk" class="screen">
                 <h2 class="glow-title">Cala la Notte nel Villaggio</h2>
                 <p class="subtitle">Leggi ad alta voce per far chiudere gli occhi a tutti:</p>
-
-                <!-- Foto Illustrazione Villaggio Scenografica -->
                 <div class="village-landscape-wrapper">
                     <img src="assets/villaggio.png" onerror="this.style.display='none'" class="village-landscape-img" alt="Paesaggio Villaggio">
                 </div>
-                
                 <div class="prose-card" id="dusk-story-text"></div>
-                
                 <div class="center-btn-wrapper">
-                    <button class="btn-blood-huge" onclick="startNightSteps()">
-                        CHIUDETE TUTTI GLI OCCHI ➔
-                    </button>
+                    <button class="btn-blood-huge" onclick="startNightSteps()">CHIUDETE TUTTI GLI OCCHI ➔</button>
                 </div>
             </div>
 
-            <!-- SCHERMATA 4: MOTORE NOTTE PASSO-PASSO -->
             <div id="screen-night" class="screen">
                 <div class="night-header">
                     <span class="night-badge" id="night-number-badge">NOTTE 1</span>
                     <span class="step-indicator" id="night-step-indicator">Fase 1/8</span>
                 </div>
-
                 <div class="caller-box" id="caller-box">
                     <div class="caller-icon" id="caller-icon">🛡️</div>
                     <h2 id="caller-title">GUARDIA DEL CORPO</h2>
                     <div class="caller-target-player" id="caller-player-name">Ruolo di: <strong>Marco</strong></div>
                     <blockquote class="caller-prompt" id="caller-prompt">"Chi vuoi sorvegliare stanotte?"</blockquote>
                 </div>
-
                 <div class="action-panel" id="action-panel"></div>
-
                 <div class="night-footer-nav">
                     <button class="btn-gold-action btn-confirm-wide" id="btn-next-step" onclick="submitNightStep()">CONFERMA E AVANTI ➔</button>
                 </div>
             </div>
 
-            <!-- SCHERMATA 5: ALBA E RESPONSO DELLA NOTTE -->
             <div id="screen-dawn" class="screen">
                 <h2 class="glow-title">L'Alba Sorge ☀️</h2>
                 <p class="subtitle">Leggi questo responso ad alta voce al villaggio:</p>
-                
                 <div class="prose-card" id="dawn-story-text"></div>
                 <div class="dawn-summary-box" id="dawn-summary-box"></div>
-
                 <div class="center-btn-wrapper">
-                    <button class="btn-gold-huge" onclick="startDayDiscussion()">
-                        APRI LA DISCUSSIONE DEL VILLAGGIO 🗣️
-                    </button>
+                    <button class="btn-gold-huge" onclick="startDayDiscussion()">APRI LA DISCUSSIONE DEL VILLAGGIO 🗣️</button>
                 </div>
             </div>
 
-            <!-- SCHERMATA 6: GIORNO, VOTAZIONE, CENSURATORE & ROGO -->
             <div id="screen-day" class="screen">
                 <h2 class="glow-title" id="day-screen-title">Il Tribunale del Villaggio 🔥</h2>
                 <p class="subtitle" id="day-screen-subtitle">Assegna i voti espressi dai vivi o registra le astensioni</p>
 
-                <!-- Box Voto Standard -->
                 <div id="standard-voting-view">
                     <div class="abstain-box">
                         <span>⚪ ASTENUTI TOTALI:</span>
@@ -204,35 +331,25 @@
                             <button onclick="changeAbstain(1)">+</button>
                         </div>
                     </div>
-
                     <div class="voting-grid" id="voting-grid"></div>
-
-                    <!-- Box Censuratore -->
                     <div id="censore-action-box" class="censore-panel hidden">
                         <p class="censore-title">🔕 Potere del Censuratore Disponibile</p>
                         <button class="btn-gold-action" onclick="openCensoreModal()">CHIUDI OCCHI E CHIAMA IL CENSURATORE</button>
                     </div>
-
                     <div class="center-btn-wrapper">
-                        <button class="btn-blood-huge" onclick="processDayVotes()">
-                            VALUTA I VOTI ED ESEGUI IL ROGO 🔥
-                        </button>
+                        <button class="btn-blood-huge" onclick="processDayVotes()">VALUTA I VOTI ED ESEGUI IL ROGO 🔥</button>
                     </div>
                 </div>
 
-                <!-- Box Referendum (Spareggio o Condanna) -->
                 <div id="referendum-view" class="referendum-panel hidden">
                     <div class="prose-card" id="referendum-intro-text"></div>
                     <div class="voting-grid" id="referendum-voting-grid"></div>
                     <div class="center-btn-wrapper">
-                        <button class="btn-blood-huge" onclick="processReferendumVotes()">
-                            CONCLUDI REFERENDUM ⚖️
-                        </button>
+                        <button class="btn-blood-huge" onclick="processReferendumVotes()">CONCLUDI REFERENDUM ⚖️</button>
                     </div>
                 </div>
             </div>
 
-            <!-- SCHERMATA 7: VITTORIA ICONICA -->
             <div id="screen-victory" class="screen victory-screen-theme">
                 <div class="victory-icon-frame" id="victory-icon-frame">
                     <div class="victory-icon-large" id="victory-icon">🏆</div>
@@ -241,42 +358,35 @@
                 <div class="title-separator"><span>✦</span> ✦ <span>✦</span></div>
                 <div class="prose-card victory-prose" id="victory-story"></div>
                 <div class="center-btn-wrapper">
-                    <button class="btn-gold-huge" onclick="location.reload()">NUOVA PARTITA</button>
+                    <button class="btn-gold-huge" onclick="location.reload()">MENU PRINCIPALE</button>
                 </div>
             </div>
 
         </div>
 
-        <!-- OVERLAY SFONDO SCURO PER CHIUDERE IL REGISTRO AL TOCCO -->
+        <!-- OVERLAY E SIDEBAR HUD DEL NARRATORE -->
         <div id="hud-backdrop" class="hud-backdrop hidden" onclick="toggleMobileHUD(false)"></div>
 
-        <!-- SIDEBAR HUD NARRATORE (CON COUNTER ASSASSINO) -->
         <aside id="narrator-hud" class="narrator-hud hidden">
             <div class="hud-header">
                 <span class="hud-title">📜 REGISTRO SEGRETO</span>
                 <span class="hud-close-mobile" onclick="toggleMobileHUD(false)">✕</span>
             </div>
-            
             <div class="hud-stats">
                 <span>Vivi: <strong id="hud-alive-count">0</strong></span>
                 <span>Lupi: <strong id="hud-wolves-count">0</strong></span>
             </div>
-
-            <!-- Box Kill Tracker Assassino nel Registro -->
             <div id="hud-assassin-tracker" class="hud-assassin-box hidden">
                 <div class="assassin-tracker-label">🔪 OBIETTIVO ASSASSINO:</div>
                 <div id="assassin-tracker-pips" class="assassin-pips"></div>
             </div>
-
             <div class="hud-list" id="hud-roster-list"></div>
         </aside>
 
-        <!-- PULSANTE MOBILE PER APRIRE L'HUD -->
         <button id="mobile-hud-btn" class="mobile-hud-btn hidden" onclick="toggleMobileHUD(true)">
             📜 REGISTRO
         </button>
 
-        <!-- MODALE EMERGENZA / FORZATURA REGIA -->
         <div id="emergency-modal" class="modal-overlay hidden">
             <div class="modal-card">
                 <h2 class="glow-title" style="font-size:1.3rem;">Menu Regia Narratore</h2>
@@ -293,7 +403,7 @@
                 <hr style="border-color:var(--card-border); margin:15px 0;">
 
                 <button class="btn-blood-huge" style="margin-top:0;" onclick="abortGameConfirm()">
-                    ⚠️ INTERROMPI E TORNA AL SETUP
+                    ⚠️ INTERROMPI E TORNA AL MENU
                 </button>
                 
                 <button class="btn-gold-action" style="margin-top:12px; width:100%; background:#333; color:#fff;" onclick="closeEmergencyModal()">
