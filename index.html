@@ -67,28 +67,28 @@
                 </div>
             </div>
 
-            <!-- SCHERMATA 2: ASSEGNAZIONE CARTE (Pass & Play Centrato) -->
+            <!-- SCHERMATA 2: ASSEGNAZIONE CARTE (Pass & Play con Immagini Reali) -->
             <div id="screen-distribution" class="screen">
                 <div class="dist-header-centered">
-                    <h2 id="dist-player-name" class="glow-title">TURNO DI: BRUNO</h2>
-                    <p id="dist-pass-text" class="dist-sub-line">Passa il telefono a Bruno.</p>
-                    <p id="dist-tap-text" class="dist-sub-highlight">Bruno, tocca la carta per rivelarla.</p>
+                    <h2 id="dist-player-name" class="glow-title">TURNO DI: GIOCATORE</h2>
+                    <p id="dist-pass-text" class="dist-sub-line">Passa il telefono.</p>
+                    <p id="dist-tap-text" class="dist-sub-highlight">Tocca la carta per rivelarla.</p>
                 </div>
                 
                 <div class="card-scene" onclick="flipCard()">
                     <div class="card-3d" id="player-card">
                         <!-- RETRO DELLA CARTA -->
                         <div class="card-face card-back">
-                            <img src="assets/retro.jpg" onerror="this.style.display='none'" class="card-image-layer" alt="Retro Carta">
+                            <img src="assets/retro.png" onerror="this.classList.add('img-fallback-hidden')" class="card-image-layer" alt="Retro Carta">
                             <div class="card-frame fallback-layer">
                                 <div class="card-inner-icon">🐺</div>
                                 <span class="card-back-text">LUPUS IN FABULA</span>
                                 <small class="tap-hint">TOCCA PER RIVELARE</small>
                             </div>
                         </div>
-                        <!-- FACCIA ANTERIORE (RUOLO) -->
+                        <!-- FACCIA ANTERIORE (ILLUSTRAZIONE RUOLO) -->
                         <div class="card-face card-front">
-                            <img id="card-front-image" src="assets/villico.jpg" onerror="this.style.display='none'" class="card-image-layer" alt="Carta Ruolo">
+                            <img id="card-front-image" src="assets/villico.png" onerror="this.classList.add('img-fallback-hidden')" class="card-image-layer" alt="Carta Ruolo">
                             <div class="card-frame fallback-layer" id="card-front-frame">
                                 <div class="card-role-icon" id="card-role-icon">🌾</div>
                                 <h3 id="card-role-name">VILLICO</h3>

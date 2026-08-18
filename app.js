@@ -41,7 +41,7 @@ const rolesDB = [
     { id: 'villico', name: 'Villico', type: 'multiple', faction: 'Villici', icon: '🌾', desc: 'Nessun potere speciale, ma la tua parola e il tuo voto sono fondamentali.' }
 ];
 
-// Gerarchia Fissa di Ordinamento per il Registro Segreto del Narratore
+// Gerarchia Fissa di Ordinamento per il Registro Narratore
 const HUD_ROLE_ORDER = [
     'lupo', 'lupo_alpha', 'assassino', 'veggente', 'medium',
     'dama', 'guardia', 'licantropo', 'pazzo', 'cieco',
@@ -365,9 +365,10 @@ function renderDistCard() {
     document.getElementById('dist-pass-text').innerText = `Passa il telefono a ${p.name}.`;
     document.getElementById('dist-tap-text').innerText = `${p.name}, tocca la carta per rivelarla.`;
 
+    // Caricamento Immagine PNG Reale
     const frontImg = document.getElementById('card-front-image');
-    frontImg.src = `assets/${p.role.id}.jpg`;
-    frontImg.style.display = 'block';
+    frontImg.classList.remove('img-fallback-hidden');
+    frontImg.src = `assets/${p.role.id}.png`;
 
     document.getElementById('card-role-icon').innerText = p.role.icon;
     document.getElementById('card-role-name').innerText = p.role.name.toUpperCase();
@@ -1264,7 +1265,6 @@ function toggleMobileHUD(forceState) {
     }
 }
 
-// Gesto Swipe da Sinistra verso Destra per chiudere il registro
 function setupSwipeGesture() {
     const hud = document.getElementById('narrator-hud');
     let touchStartX = 0;
@@ -1276,7 +1276,6 @@ function setupSwipeGesture() {
 
     hud.addEventListener('touchend', (e) => {
         touchEndX = e.changedTouches[0].screenX;
-        // Se trascini verso destra per più di 60px -> chiudi
         if (touchEndX - touchStartX > 60) {
             toggleMobileHUD(false);
         }
