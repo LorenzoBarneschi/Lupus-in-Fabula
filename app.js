@@ -415,8 +415,6 @@ function renderDistCard() {
     const frontImg = document.getElementById('card-front-image');
     frontImg.classList.remove('img-fallback-hidden');
     
-    // FIX BUG IMMAGINE ROTTA: 
-    // Se l'immagine non esiste, nasconde il tag <img> e lascia agire il bellissimo sfondo fallback CSS.
     frontImg.onerror = function() {
         this.classList.add('img-fallback-hidden');
     };
@@ -864,25 +862,34 @@ function resolveNightOutcomes() {
         const guess = gameState.nightActions.assassinoRoleGuess;
         const isProtected = (aTarget.id === damaProt || aTarget.id === guardiaProt);
 
+        // Se l'Assassino indovina la professione...
         if (aTarget.role.id === guess) {
+            
+            // Ha indovinato! Quindi NON viene bloccato la notte successiva.
             gameState.history.assassinoBlocked = false;
+            
             let inHome = true;
             if (aTarget.role.id === 'amanti' && aTarget.id !== amantiShelterId) inHome = false;
 
             if (inHome) {
-                gameState.history.assassinoKills++;
-                if (!isProtected && !deathsThisNight.some(d => d.player.id === aTarget.id)) {
-                    deathsThisNight.push({ player: aTarget, reason: 'assassin' });
-                    if (aTarget.role.id === 'appestato') {
-                        plagueTriggered = true;
-                        const assassinPlayer = gameState.roster.find(p => p.role.id === 'assassino');
-                        if (assassinPlayer && !deathsThisNight.some(d => d.player.id === assassinPlayer.id)) {
-                            deathsThisNight.push({ player: assassinPlayer, reason: 'plague' });
+                // Prende il punto solo se la vittima non è stata protetta
+                if (!isProtected) {
+                    gameState.history.assassinoKills++;
+                    if (!deathsThisNight.some(d => d.player.id === aTarget.id)) {
+                        deathsThisNight.push({ player: aTarget, reason: 'assassin' });
+                        // Logica appestato in caso di kill dell'assassino
+                        if (aTarget.role.id === 'appestato') {
+                            plagueTriggered = true;
+                            const assassinPlayer = gameState.roster.find(p => p.role.id === 'assassino');
+                            if (assassinPlayer && !deathsThisNight.some(d => d.player.id === assassinPlayer.id)) {
+                                deathsThisNight.push({ player: assassinPlayer, reason: 'plague' });
+                            }
                         }
                     }
                 }
             }
         } else {
+            // Non ha indovinato! Niente punto, niente kill, e viene BLOCCATO.
             gameState.history.assassinoBlocked = true;
         }
     } else {
@@ -1201,8 +1208,10 @@ function checkVictoryConditions() {
     const wolvesLiving = living.filter(p => p.isWolf).length;
     const assassinLiving = living.some(p => p.role.id === 'assassino');
 
-    // FIX COUNTER ASSASSINO (Fino a 10 giocatori = 2 kill, da 11 in su = 3 kill)
-    const requiredKills = gameState.players.length <= 10 ? 2 : 3;
+    // FIX MATEMATICA ASSASSINO: 6-8->2, 9-12->3, 13+->4
+    let requiredKills = 2;
+    if (gameState.players.length >= 9 && gameState.players.length <= 12) requiredKills = 3;
+    if (gameState.players.length >= 13) requiredKills = 4;
     
     if (gameState.history.assassinoKills >= requiredKills && assassinLiving) {
         showVictory('assassino', `L'Assassino ha raggiunto ${requiredKills} eliminazioni perfette nell'ombra! Trionfa da solo.`);
@@ -1306,8 +1315,9 @@ function updateNarratorHUD() {
     if (hasAssassin) {
         assassinTrackerBox.classList.remove('hidden');
         
-        // FIX COUNTER ASSASSINO (Fino a 10 giocatori = 2 kill, da 11 in su = 3 kill)
-        const requiredKills = gameState.players.length <= 10 ? 2 : 3;
+        let requiredKills = 2;
+        if (gameState.players.length >= 9 && gameState.players.length <= 12) requiredKills = 3;
+        if (gameState.players.length >= 13) requiredKills = 4;
         
         let pipsStr = '';
         for (let i = 0; i < requiredKills; i++) {
@@ -1341,11 +1351,11 @@ function toggleMobileHUD(forceState) {
     if (forceState !== undefined) {
         if (forceState) {
             hud.classList.add('open');
-            hud.style.transform = ''; // resetta l'inline style se presente
+            hud.style.transform = ''; 
             backdrop.classList.remove('hidden');
         } else {
             hud.classList.remove('open');
-            hud.style.transform = ''; // resetta per far agire la transizione CSS
+            hud.style.transform = ''; 
             backdrop.classList.add('hidden');
         }
     } else {
@@ -1355,7 +1365,7 @@ function toggleMobileHUD(forceState) {
     }
 }
 
-// Swipe fluido per chiudere il cassetto - ORA SENZA SPOSTARE LO SFONDO SOTTO!
+// Swipe fluido per chiudere il cassetto senza muovere lo sfondo
 function setupSwipeGesture() {
     const hud = document.getElementById('narrator-hud');
     let touchStartX = 0;
@@ -1366,25 +1376,21 @@ function setupSwipeGesture() {
     }, { passive: true });
 
     hud.addEventListener('touchmove', (e) => {
-        // PREVENT DEFAULT BLOCCA LO SCROLL DELLA PAGINA SOTTO DURANTE LO SWIPE
         e.preventDefault(); 
         
         touchCurrentX = e.touches[0].clientX;
         let deltaX = touchCurrentX - touchStartX;
         
-        // Permette di trascinare visivamente la sidebar verso destra
         if (deltaX > 0) {
             hud.style.transform = `translateX(${deltaX}px)`;
         }
-    }, { passive: false }); // <-- IMPORTANTE: DEVE ESSERE FALSE PER POTER USARE PREVENT DEFAULT
+    }, { passive: false }); 
 
     hud.addEventListener('touchend', (e) => {
         let deltaX = touchCurrentX - touchStartX;
-        // Se si trascina per più di 60px verso destra, chiude
         if (deltaX > 60) {
             toggleMobileHUD(false);
         } else {
-            // Altrimenti scatta di nuovo in posizione aperta
             hud.style.transform = '';
         }
         touchStartX = 0;
