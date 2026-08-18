@@ -41,7 +41,7 @@ const rolesDB = [
     { id: 'villico', name: 'Villico', type: 'multiple', faction: 'Villici', icon: '🌾', desc: 'Nessun potere speciale, ma la tua parola e il tuo voto sono fondamentali.' }
 ];
 
-// Pool Varianti Immagini (puoi aggiungere tutti i file che vuoi nella cartella assets)
+// Pool Varianti Immagini
 const roleImagePool = {
     amanti: ['assets/amanti_1.png', 'assets/amanti_2.png'],
     lupo: ['assets/lupo_1.png', 'assets/lupo_2.png', 'assets/lupo_3.png', 'assets/lupo_4.png', 'assets/lupo.png'],
@@ -333,7 +333,6 @@ function validateDeck() {
 function startDistribution() {
     gameState.deck = [];
 
-    // Mescola le varianti dei lupi e villici per questa partita
     const wolvesVariants = [...(roleImagePool.lupo || [])].sort(() => Math.random() - 0.5);
     const villiciVariants = [...(roleImagePool.villico || [])].sort(() => Math.random() - 0.5);
     let wolfVarIdx = 0;
@@ -341,7 +340,6 @@ function startDistribution() {
 
     for (const [rId, qty] of Object.entries(gameState.selectedRoles)) {
         if (rId === 'amanti' && qty === 2) {
-            // Amanti: 1 Uomo (_1) e 1 Donna (_2) garantiti
             const roleObj = rolesDB.find(r => r.id === 'amanti');
             gameState.deck.push({ ...roleObj, cardImage: 'assets/amanti_1.png' });
             gameState.deck.push({ ...roleObj, cardImage: 'assets/amanti_2.png' });
@@ -396,12 +394,10 @@ function renderDistCard() {
     document.getElementById('dist-pass-text').innerText = `Passa il telefono a ${p.name}.`;
     document.getElementById('dist-tap-text').innerText = `${p.name}, tocca la carta per rivelarla.`;
 
-    // Caricamento Immagine Dinamica della Variante
     const frontImg = document.getElementById('card-front-image');
     frontImg.classList.remove('img-fallback-hidden');
     frontImg.src = p.cardImage;
     frontImg.onerror = function() {
-        // Fallback automatico al file standard se non trova la variante
         this.src = `assets/${p.role.id}.png`;
     };
 

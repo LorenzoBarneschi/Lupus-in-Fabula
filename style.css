@@ -27,7 +27,6 @@ body {
     justify-content: center;
     background-image: radial-gradient(circle at 50% 20%, #171b28 0%, var(--bg-dark) 80%);
     
-    /* Protezione Safe Area iPhone (Dynamic Island & Notch) */
     padding-top: max(env(safe-area-inset-top, 0px), 24px);
     padding-bottom: max(env(safe-area-inset-bottom, 0px), 20px);
 }
@@ -348,36 +347,71 @@ h1, h2, h3, .glow-title, .victory-title {
     font-style: italic;
 }
 
-/* --- ANIMAZIONE CARTA 3D CON AUTOCROP DEI BORDI --- */
+/* ========================================================= */
+/* --- MOTORE 3D FLIP COMPATIBILE AL 100% CON IOS SAFARI --- */
+/* ========================================================= */
 .card-scene {
-    perspective: 1000px;
+    perspective: 1200px;
+    -webkit-perspective: 1200px;
     width: 280px;
-    height: 400px; /* Rapporto proporzionato alle tue illustrazioni reali */
+    height: 400px;
     margin: 8px auto 14px auto;
     cursor: pointer;
 }
+
 .card-3d {
     width: 100%;
     height: 100%;
     position: relative;
     transform-style: preserve-3d;
+    -webkit-transform-style: preserve-3d;
     transition: transform 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    -webkit-transition: -webkit-transform 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
-.card-3d.flipped { transform: rotateY(180deg); }
+
+.card-3d.flipped {
+    transform: rotateY(180deg);
+    -webkit-transform: rotateY(180deg);
+}
 
 .card-face {
     position: absolute;
     width: 100%;
     height: 100%;
-    backface-visibility: hidden;
+    top: 0;
+    left: 0;
     border-radius: 16px;
     background: var(--card-dark);
     box-shadow: 0 12px 35px rgba(0,0,0,0.85);
-    overflow: hidden; /* Taglia via automaticamente gli angoli squadrati dell'immagine */
+    overflow: hidden;
     border: 2px solid var(--gold-dark);
+    
+    /* Regole obbligatorie per iOS Safari */
+    backface-visibility: hidden !important;
+    -webkit-backface-visibility: hidden !important;
+    transform-style: preserve-3d;
+    -webkit-transform-style: preserve-3d;
 }
 
-/* Livello Immagine Reale: Zoom leggero per eliminare margini vuoti e stondatura automatica */
+/* FACCIA RETRO: Parte a 0 gradi */
+.card-back {
+    transform: rotateY(0deg) translateZ(1px);
+    -webkit-transform: rotateY(0deg) translateZ(1px);
+    z-index: 2;
+}
+
+/* FACCIA ANTERIORE: Parte già ruotata a 180 gradi così quando la carta gira si vede dritta! */
+.card-front {
+    transform: rotateY(180deg) translateZ(1px);
+    -webkit-transform: rotateY(180deg) translateZ(1px);
+    z-index: 1;
+}
+
+.card-3d.flipped .card-front {
+    z-index: 3;
+}
+
+/* Immagine Reale con Auto-Crop */
 .card-image-layer {
     width: 100%;
     height: 100%;
@@ -386,13 +420,14 @@ h1, h2, h3, .glow-title, .victory-title {
     top: 0;
     left: 0;
     z-index: 2;
-    transform: scale(1.04); /* Ingrandisce del 4% per tagliare via i bordi gialli in eccesso del ritaglio */
+    transform: scale(1.04);
     border-radius: 14px;
-    transition: opacity 0.3s ease;
+    backface-visibility: hidden !important;
+    -webkit-backface-visibility: hidden !important;
 }
 .img-fallback-hidden { display: none !important; }
 
-/* Livello Fallback (se l'immagine non è presente) */
+/* Livello Fallback */
 .card-frame {
     border-radius: 12px;
     height: 100%;
@@ -405,11 +440,13 @@ h1, h2, h3, .glow-title, .victory-title {
     background: radial-gradient(circle at center, #1b2030 0%, #0c0e14 100%);
     position: relative;
     z-index: 1;
+    backface-visibility: hidden !important;
+    -webkit-backface-visibility: hidden !important;
 }
 .card-back .card-inner-icon { font-size: 4rem; margin-bottom: 15px; }
 .card-back-text { font-family: 'Cinzel', serif; font-size: 1.2rem; color: var(--gold); letter-spacing: 3px; }
 .tap-hint { margin-top: 30px; font-size: 0.75rem; color: var(--gold-dark); letter-spacing: 2px; }
-.card-front { transform: rotateY(180deg); }
+.card-front { transform: rotateY(180deg) translateZ(1px); -webkit-transform: rotateY(180deg) translateZ(1px); }
 .card-role-icon { font-size: 4.5rem; margin-bottom: 10px; }
 .role-faction-badge {
     background: var(--gold);
