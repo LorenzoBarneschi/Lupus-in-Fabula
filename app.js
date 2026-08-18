@@ -113,18 +113,15 @@ const NARRATION_MASTER_LIB = {
     ]
 };
 
-// Sacchetti di memoria per evitare ripetizioni
 let phraseBags = {};
 
 function getUniqueNarration(category) {
     if (!phraseBags[category] || phraseBags[category].length === 0) {
-        // Riempi e mescola crittograficamente il sacchetto
         phraseBags[category] = cryptoShuffle([...NARRATION_MASTER_LIB[category]]);
     }
     return phraseBags[category].pop();
 }
 
-// Algoritmo Crittografico di Mescolata Pura
 function cryptoShuffle(array) {
     for (let i = array.length - 1; i > 0; i--) {
         const randomBuffer = new Uint32Array(1);
@@ -349,7 +346,7 @@ function validateDeck() {
 }
 
 // ==========================================
-// 5. ASSEGNAZIONE RUOLI & RANDOMIZZAZIONE CRITTOGRAFICA
+// 5. ASSEGNAZIONE RUOLI
 // ==========================================
 function startDistribution() {
     gameState.deck = [];
@@ -380,7 +377,6 @@ function startDistribution() {
         }
     }
 
-    // Mescolata Crittografica Pura al 100%
     const shuffledPlayers = cryptoShuffle([...gameState.players]);
     const shuffledDeck = cryptoShuffle([...gameState.deck]);
 
@@ -418,10 +414,14 @@ function renderDistCard() {
 
     const frontImg = document.getElementById('card-front-image');
     frontImg.classList.remove('img-fallback-hidden');
-    frontImg.src = p.cardImage;
+    
+    // FIX BUG IMMAGINE ROTTA: 
+    // Se l'immagine non esiste, nasconde il tag <img> e lascia agire il bellissimo sfondo fallback CSS.
     frontImg.onerror = function() {
-        this.src = `assets/${p.role.id}.png`;
+        this.classList.add('img-fallback-hidden');
     };
+    
+    frontImg.src = p.cardImage;
 
     document.getElementById('card-role-icon').innerText = p.role.icon;
     document.getElementById('card-role-name').innerText = p.role.name.toUpperCase();
@@ -461,7 +461,6 @@ function showDuskTransition() {
     switchScreen('screen-dusk');
     document.getElementById('bar-phase-text').innerText = `NOTTE ${gameState.nightNumber} (IN ARRIVO)`;
     
-    // Pesca la frase dal sacchetto anticopia
     const duskText = getUniqueNarration('dusk');
     document.getElementById('dusk-story-text').innerHTML = `"${duskText}"`;
     updateNarratorHUD();
@@ -1202,7 +1201,9 @@ function checkVictoryConditions() {
     const wolvesLiving = living.filter(p => p.isWolf).length;
     const assassinLiving = living.some(p => p.role.id === 'assassino');
 
-    const requiredKills = gameState.players.length <= 8 ? 2 : (gameState.players.length <= 12 ? 3 : 4);
+    // FIX COUNTER ASSASSINO (Fino a 10 giocatori = 2 kill, da 11 in su = 3 kill)
+    const requiredKills = gameState.players.length <= 10 ? 2 : 3;
+    
     if (gameState.history.assassinoKills >= requiredKills && assassinLiving) {
         showVictory('assassino', `L'Assassino ha raggiunto ${requiredKills} eliminazioni perfette nell'ombra! Trionfa da solo.`);
         return true;
@@ -1304,7 +1305,10 @@ function updateNarratorHUD() {
     const hasAssassin = gameState.roster.some(p => p.role.id === 'assassino');
     if (hasAssassin) {
         assassinTrackerBox.classList.remove('hidden');
-        const requiredKills = gameState.players.length <= 8 ? 2 : (gameState.players.length <= 12 ? 3 : 4);
+        
+        // FIX COUNTER ASSASSINO (Fino a 10 giocatori = 2 kill, da 11 in su = 3 kill)
+        const requiredKills = gameState.players.length <= 10 ? 2 : 3;
+        
         let pipsStr = '';
         for (let i = 0; i < requiredKills; i++) {
             pipsStr += (i < gameState.history.assassinoKills) ? '🟢' : '⚪';
@@ -1351,7 +1355,7 @@ function toggleMobileHUD(forceState) {
     }
 }
 
-// Swipe fluido per chiudere il cassetto
+// Swipe fluido per chiudere il cassetto - ORA SENZA SPOSTARE LO SFONDO SOTTO!
 function setupSwipeGesture() {
     const hud = document.getElementById('narrator-hud');
     let touchStartX = 0;
@@ -1362,6 +1366,9 @@ function setupSwipeGesture() {
     }, { passive: true });
 
     hud.addEventListener('touchmove', (e) => {
+        // PREVENT DEFAULT BLOCCA LO SCROLL DELLA PAGINA SOTTO DURANTE LO SWIPE
+        e.preventDefault(); 
+        
         touchCurrentX = e.touches[0].clientX;
         let deltaX = touchCurrentX - touchStartX;
         
@@ -1369,7 +1376,7 @@ function setupSwipeGesture() {
         if (deltaX > 0) {
             hud.style.transform = `translateX(${deltaX}px)`;
         }
-    }, { passive: true });
+    }, { passive: false }); // <-- IMPORTANTE: DEVE ESSERE FALSE PER POTER USARE PREVENT DEFAULT
 
     hud.addEventListener('touchend', (e) => {
         let deltaX = touchCurrentX - touchStartX;
