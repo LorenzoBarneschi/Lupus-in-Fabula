@@ -31,13 +31,13 @@
                 <button class="btn-emergency" onclick="openEmergencyModal()">⚙️ REGIA / STOP</button>
             </div>
 
-            <!-- SCHERMATA 0: MENU PRINCIPALE CON BANNER ARTISTICO -->
-            <div id="screen-home" class="screen active">
-                <div class="home-banner-container">
+            <!-- SCHERMATA 0: MENU PRINCIPALE (HOME IMMERSIVA E DISTRIBUITA) -->
+            <div id="screen-home" class="screen active screen-home-layout">
+                
+                <div class="home-banner-wrapper">
                     <img src="assets/banner.png" onerror="this.classList.add('hidden'); document.getElementById('home-text-fallback').classList.remove('hidden');" class="home-hero-banner" alt="Lupus in Fabula Banner">
                     
-                    <!-- Fallback nel caso in cui l'immagine non sia ancora stata salvata -->
-                    <div id="home-text-fallback" class="app-imperial-header hidden" style="margin-top: 20px;">
+                    <div id="home-text-fallback" class="app-imperial-header hidden" style="margin-top: 15px;">
                         <div class="logo-wolf-crest">🐺</div>
                         <h1 class="imperial-title">LUPUS IN FABULA</h1>
                         <div class="title-separator"><span>✦</span> ✦ <span>✦</span></div>
@@ -45,21 +45,32 @@
                     </div>
                 </div>
 
-                <div class="center-btn-wrapper" style="flex-direction: column; gap: 14px; margin-top: 20px;">
-                    <button class="btn-gold-huge" onclick="selectMode('online')">
-                        🌐 GIOCA ONLINE (STANZA CONDIVISA)
-                        <small style="display:block; font-size:0.75rem; color:#222; margin-top:4px; font-weight:bold;">Ognuno vede il ruolo dal proprio telefono</small>
+                <!-- I 3 GRANDI PULSANTI DELLA HOME (UNIFORMI E BEN DISTRIBUITI) -->
+                <div class="home-actions-menu">
+                    <button class="home-menu-card btn-online-card" onclick="selectMode('online')">
+                        <div class="card-btn-content">
+                            <span class="card-btn-title">🌐 GIOCA ONLINE</span>
+                            <span class="card-btn-sub">Stanza Condivisa • Ognuno dal suo telefono</span>
+                        </div>
                     </button>
                     
-                    <button class="btn-gold-action" style="padding: 15px; font-size:0.95rem;" onclick="selectMode('local')">
-                        📱 MODALITÀ CLASSICA LOCALE
-                        <small style="display:block; font-size:0.72rem; color:#222; margin-top:3px;">Un solo telefono da passarsi di mano in mano</small>
+                    <button class="home-menu-card btn-local-card" onclick="selectMode('local')">
+                        <div class="card-btn-content">
+                            <span class="card-btn-title">📱 MODALITÀ LOCALE</span>
+                            <span class="card-btn-sub">Classica • Un solo telefono da passarsi</span>
+                        </div>
                     </button>
 
-                    <!-- Nuovo Pulsante per il Grimorio / Guida -->
-                    <button class="btn-grimorio" onclick="openGrimorioModal()">
-                        📖 GRIMORIO DEI RUOLI & REGOLE
+                    <button class="home-menu-card btn-guide-card" onclick="openGuideModal()">
+                        <div class="card-btn-content">
+                            <span class="card-btn-title">📖 GUIDA RUOLI & REGOLE</span>
+                            <span class="card-btn-sub">Consulta abilità, fazioni e strategie</span>
+                        </div>
                     </button>
+                </div>
+
+                <div class="home-footer-credits">
+                    <span>✦ LUPUS IN FABULA • REGIA DIGITALE ✦</span>
                 </div>
             </div>
 
@@ -223,7 +234,7 @@
                 </p>
             </div>
 
-            <!-- SCHERMATA LOCALE: ASSEGNAZIONE CARTE PASS & PLAY -->
+            <!-- SCHERMATA LOCALE: ASSEGNAZIONE CARTE (PASS & PLAY CON PROTEZIONE ANTI-SPOILER) -->
             <div id="screen-distribution-local" class="screen">
                 <div class="dist-header-centered">
                     <h2 id="dist-player-name" class="glow-title">TURNO DI: GIOCATORE</h2>
@@ -372,16 +383,30 @@
 
         </div>
 
-        <!-- MODALE GRIMORIO DEI RUOLI (ENCICLOPEDIA) -->
-        <div id="grimorio-modal" class="modal-overlay hidden">
-            <div class="modal-card" style="max-height: 85vh; display: flex; flex-direction: column;">
-                <div style="display:flex; justify-content:space-between; align-items:center; border-bottom: 1px solid var(--gold-dark); padding-bottom:8px; margin-bottom: 10px;">
-                    <h2 class="glow-title" style="font-size:1.15rem; margin:0;">📖 Grimorio dei Ruoli</h2>
-                    <span style="font-size:1.5rem; cursor:pointer; color:#ff5555;" onclick="closeGrimorioModal()">✕</span>
+        <!-- MODALE GUIDA AI RUOLI & REGOLE (COMPLETA ED ELEGANTE) -->
+        <div id="guide-modal" class="modal-overlay hidden">
+            <div class="modal-card guide-modal-card">
+                
+                <!-- HEADER GUIDA -->
+                <div class="guide-modal-header">
+                    <div id="guide-header-main">
+                        <h2 class="glow-title" style="font-size:1.15rem; margin:0; text-align:left;">📖 Guida ai Ruoli & Regole</h2>
+                        <span class="guide-subtitle-text">Tocca un ruolo per aprire la sua scheda</span>
+                    </div>
+                    <span class="guide-close-btn" onclick="closeGuideModal()">✕</span>
                 </div>
-                <div id="grimorio-roles-list" style="overflow-y:auto; flex:1; display:flex; flex-direction:column; gap:10px; padding-right:4px;">
+
+                <!-- VISTA 1: LISTA RUOLI -->
+                <div id="guide-roles-list-view" class="guide-roles-container">
                     <!-- Generato dinamicamente -->
                 </div>
+
+                <!-- VISTA 2: SCHEDA DETTAGLIATA RUOLO (APRE AL TOCCO) -->
+                <div id="guide-role-detail-view" class="guide-detail-container hidden">
+                    <button class="btn-back-nav" style="margin-bottom:8px;" onclick="showGuideListView()">⬅ TORNA ALL'ELENCO</button>
+                    <div id="guide-detail-content"></div>
+                </div>
+
             </div>
         </div>
 

@@ -49,82 +49,255 @@ body {
     padding-bottom: 30px;
 }
 
-/* Banner Artistico della Home (Immersione Nascosta/Nativa) */
-.home-banner-container {
+/* ==========================================
+   LAYOUT HOME SCREEN & 3 GRANDI PULSANTI
+   ========================================== */
+.screen-home-layout {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    min-height: calc(100vh - 80px);
+    padding: 6px 0 16px 0;
+}
+
+.home-banner-wrapper {
     width: 100%;
     display: flex;
     justify-content: center;
     align-items: center;
-    margin-top: 6px;
+    margin-top: 4px;
     margin-bottom: 12px;
 }
+
 .home-hero-banner {
     width: 100%;
-    max-height: 240px;
+    max-height: 250px;
     object-fit: cover;
     border-radius: 12px;
     border: 1px solid var(--gold-dark);
-    box-shadow: 0 10px 35px rgba(0, 0, 0, 0.85), 0 0 20px rgba(212, 175, 55, 0.2);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.9), 0 0 25px rgba(212, 175, 55, 0.2);
 }
 
-/* Pulsante Grimorio dei Ruoli nella Home */
-.btn-grimorio {
-    background: rgba(212, 175, 55, 0.1);
-    border: 1px dashed var(--gold);
-    color: var(--gold-bright);
-    font-family: 'Cinzel', serif;
-    font-weight: 700;
-    font-size: 0.85rem;
-    padding: 13px 18px;
-    border-radius: 8px;
-    cursor: pointer;
-    width: 100%;
-    letter-spacing: 1.5px;
-    transition: 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
-    margin-top: 2px;
-}
-.btn-grimorio:active {
-    transform: scale(0.95);
-    background: rgba(212, 175, 55, 0.25);
-    border-style: solid;
-}
-
-/* Schede nel Grimorio Modal */
-.grimorio-card-item {
-    background: #171b26;
-    border: 1px solid var(--card-border);
-    border-radius: 8px;
-    padding: 12px;
+.home-actions-menu {
     display: flex;
     flex-direction: column;
-    gap: 6px;
-    border-left: 3px solid var(--gold);
+    gap: 14px;
+    width: 100%;
+    margin-top: 10px;
 }
-.grimorio-card-item .g-header {
+
+.home-menu-card {
+    background: linear-gradient(135deg, rgba(212, 175, 55, 0.12) 0%, rgba(18, 21, 31, 0.95) 100%);
+    border: 1px solid var(--gold);
+    border-radius: 10px;
+    padding: 16px 14px;
+    cursor: pointer;
+    width: 100%;
+    text-align: center;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.6);
+    transition: 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+    user-select: none;
+}
+
+.home-menu-card:active {
+    transform: scale(0.96);
+    background: linear-gradient(135deg, var(--gold) 0%, var(--gold-dark) 100%);
+}
+
+.card-btn-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+}
+
+.card-btn-title {
+    font-family: 'Cinzel', serif;
+    font-size: 1.02rem;
+    font-weight: 900;
+    color: var(--gold-bright);
+    letter-spacing: 1.5px;
+}
+
+.home-menu-card:active .card-btn-title {
+    color: #000;
+}
+
+.card-btn-sub {
+    font-family: 'Lora', serif;
+    font-size: 0.78rem;
+    color: var(--text-muted);
+    font-style: italic;
+}
+
+.home-menu-card:active .card-btn-sub {
+    color: #1a1a1a;
+}
+
+.home-footer-credits {
+    text-align: center;
+    font-family: 'Cinzel', serif;
+    font-size: 0.72rem;
+    color: var(--gold-dark);
+    letter-spacing: 2px;
+    margin-top: 16px;
+    opacity: 0.8;
+}
+
+/* ==========================================
+   MODALE GUIDA AI RUOLI & SCHEDE DETTAGLIATE
+   ========================================== */
+.guide-modal-card {
+    max-height: 88vh;
+    display: flex;
+    flex-direction: column;
+    padding: 18px;
+}
+
+.guide-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid var(--gold-dark);
+    padding-bottom: 10px;
+    margin-bottom: 12px;
+}
+
+.guide-subtitle-text {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    font-family: 'Lora', serif;
+    font-style: italic;
+    display: block;
+    margin-top: 2px;
+}
+
+.guide-close-btn {
+    font-size: 1.6rem;
+    cursor: pointer;
+    color: #ff5555;
+    padding: 0 4px;
+    font-weight: bold;
+}
+
+.guide-roles-container {
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding-right: 2px;
+}
+
+.guide-role-row {
+    background: #171b26;
+    border: 1px solid var(--card-border);
+    border-left: 4px solid var(--gold);
+    border-radius: 8px;
+    padding: 12px 14px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+    transition: 0.15s ease;
+}
+
+.guide-role-row:active {
+    transform: scale(0.97);
+    background: rgba(212, 175, 55, 0.15);
+    border-color: var(--gold);
+}
+
+.guide-role-left {
     display: flex;
     align-items: center;
-    justify-content: space-between;
+    gap: 10px;
 }
-.grimorio-card-item .g-title {
+
+.guide-role-icon {
+    font-size: 1.6rem;
+}
+
+.guide-role-name {
     font-family: 'Cinzel', serif;
     font-weight: bold;
     color: var(--gold-bright);
     font-size: 0.95rem;
 }
-.grimorio-card-item .g-faction {
-    font-size: 0.75rem;
+
+.guide-role-faction-tag {
+    font-size: 0.72rem;
+    padding: 3px 8px;
+    border-radius: 10px;
     font-weight: bold;
-    color: var(--gold);
     text-transform: uppercase;
 }
-.grimorio-card-item .g-desc {
-    font-size: 0.85rem;
-    color: var(--text-main);
-    line-height: 1.4;
+
+.faction-tag-villici { background: rgba(50, 180, 50, 0.2); color: #88ff88; border: 1px solid #33aa33; }
+.faction-tag-lupi { background: rgba(200, 0, 0, 0.2); color: #ff8888; border: 1px solid #aa3333; }
+.faction-tag-solo { background: rgba(180, 80, 255, 0.2); color: #d099ff; border: 1px solid #8844bb; }
+
+.guide-detail-container {
+    overflow-y: auto;
+    padding-right: 2px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
 }
 
-/* Pulsanti di Navigazione Indietro / Esci */
+.guide-detail-card {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    text-align: center;
+    padding-bottom: 10px;
+}
+
+.guide-detail-thumb {
+    width: 140px;
+    height: 200px;
+    object-fit: cover;
+    border-radius: 10px;
+    border: 2px solid var(--gold);
+    margin: 0 auto;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.85);
+}
+
+.guide-detail-title {
+    font-family: 'Cinzel', serif;
+    font-size: 1.25rem;
+    color: var(--gold-bright);
+    margin: 2px 0 0 0;
+}
+
+.guide-section-box {
+    background: #171b26;
+    border: 1px solid var(--card-border);
+    border-radius: 8px;
+    padding: 12px;
+    text-align: left;
+    font-size: 0.88rem;
+    line-height: 1.5;
+}
+
+.guide-section-title {
+    font-family: 'Cinzel', serif;
+    font-size: 0.8rem;
+    color: var(--gold);
+    font-weight: bold;
+    margin-bottom: 4px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.guide-tip-box {
+    border-left: 3px solid var(--gold);
+    background: rgba(212, 175, 55, 0.06);
+    font-style: italic;
+}
+
+/* ==========================================
+   PULSANTI NAVIGAZIONE & HEADER IMPERIALI
+   ========================================== */
 .btn-back-nav {
     display: inline-flex;
     align-items: center;
@@ -143,6 +316,7 @@ body {
     transition: 0.15s ease;
     user-select: none;
 }
+
 .btn-back-nav:active {
     transform: scale(0.95);
     color: var(--gold-bright);
@@ -150,16 +324,17 @@ body {
     background: rgba(212, 175, 55, 0.1);
 }
 
-/* Header Imperiale */
 .app-imperial-header {
     text-align: center;
     margin-bottom: 15px;
 }
+
 .logo-wolf-crest {
     font-size: 3rem;
     filter: drop-shadow(0 0 15px rgba(212, 175, 55, 0.5));
     margin-bottom: -4px;
 }
+
 .imperial-title {
     font-family: 'Cinzel', serif;
     font-size: 1.8rem;
@@ -167,6 +342,7 @@ body {
     letter-spacing: 4px;
     text-shadow: 0 0 20px rgba(212, 175, 55, 0.4);
 }
+
 .title-separator {
     color: var(--gold-dark);
     font-size: 0.8rem;
@@ -186,12 +362,14 @@ body {
     margin-bottom: 18px;
     margin-top: 6px;
 }
+
 .bar-phase-indicator {
     font-family: 'Cinzel', serif;
     font-size: 0.8rem;
     color: var(--gold);
     letter-spacing: 1px;
 }
+
 .btn-emergency {
     background: rgba(139, 0, 0, 0.3);
     border: 1px solid var(--blood-red-light);
@@ -204,6 +382,7 @@ body {
     font-weight: bold;
     transition: 0.15s transform;
 }
+
 .btn-emergency:active { transform: scale(0.95); }
 
 /* Tipografia */
@@ -233,6 +412,7 @@ h1, h2, h3, .glow-title, .victory-title {
     animation: fadeIn 0.35s ease;
     position: relative;
 }
+
 .screen.active { display: flex; }
 .hidden { display: none !important; }
 
@@ -270,6 +450,7 @@ h1, h2, h3, .glow-title, .victory-title {
     padding: 8px 12px;
     margin-bottom: 12px;
 }
+
 .saved-label {
     font-size: 0.75rem;
     color: var(--gold);
@@ -277,7 +458,9 @@ h1, h2, h3, .glow-title, .victory-title {
     display: block;
     margin-bottom: 6px;
 }
+
 .saved-chips-list { display: flex; flex-wrap: wrap; gap: 6px; }
+
 .saved-chip {
     background: #171b26;
     border: 1px solid var(--card-border);
@@ -291,11 +474,12 @@ h1, h2, h3, .glow-title, .victory-title {
     gap: 6px;
     transition: 0.15s;
 }
+
 .saved-chip:active { transform: scale(0.92); }
 .saved-chip:hover { border-color: var(--gold); color: var(--gold-bright); }
 .saved-chip .del-mem { color: #ff5555; font-size: 0.75rem; }
 
-/* Micro-animazioni Pulsanti */
+/* Pulsanti Standard */
 .btn-gold-action {
     background: linear-gradient(135deg, var(--gold) 0%, var(--gold-dark) 100%);
     color: #000;
@@ -309,6 +493,7 @@ h1, h2, h3, .glow-title, .victory-title {
     transition: 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
     box-shadow: 0 4px 12px rgba(212, 175, 55, 0.2);
 }
+
 .btn-gold-action:active {
     transform: scale(0.94);
     box-shadow: 0 1px 4px rgba(212, 175, 55, 0.4);
@@ -322,6 +507,7 @@ h1, h2, h3, .glow-title, .victory-title {
     max-height: 110px;
     overflow-y: auto;
 }
+
 .player-chip {
     background: rgba(212, 175, 55, 0.1);
     border: 1px solid var(--gold-dark);
@@ -333,6 +519,7 @@ h1, h2, h3, .glow-title, .victory-title {
     align-items: center;
     gap: 8px;
 }
+
 .player-chip .remove-btn { cursor: pointer; color: #ff5555; font-weight: bold; }
 
 .deck-status-bar {
@@ -353,6 +540,7 @@ h1, h2, h3, .glow-title, .victory-title {
     gap: 10px;
     margin-bottom: 24px;
 }
+
 .role-card-item {
     background: var(--card-dark);
     border: 1px solid var(--card-border);
@@ -363,10 +551,12 @@ h1, h2, h3, .glow-title, .victory-title {
     align-items: center;
     transition: 0.2s ease;
 }
+
 .role-card-item.selected {
     border-color: var(--gold);
     background: rgba(212, 175, 55, 0.05);
 }
+
 .role-info-left { display: flex; align-items: center; gap: 12px; }
 .role-icon-small { font-size: 1.5rem; }
 .role-name-text { font-family: 'Cinzel', serif; font-size: 0.95rem; font-weight: bold; }
@@ -392,6 +582,7 @@ h1, h2, h3, .glow-title, .victory-title {
     border-radius: 20px;
     overflow: hidden;
 }
+
 .counter-pill button {
     background: transparent;
     color: var(--gold);
@@ -406,7 +597,9 @@ h1, h2, h3, .glow-title, .victory-title {
     justify-content: center;
     transition: 0.15s;
 }
+
 .counter-pill button:active { background: rgba(212, 175, 55, 0.3); }
+
 .counter-pill span {
     width: 28px;
     text-align: center;
@@ -431,7 +624,9 @@ h1, h2, h3, .glow-title, .victory-title {
     box-shadow: 0 6px 20px rgba(212, 175, 55, 0.3);
     transition: 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
+
 .btn-gold-huge:active { transform: scale(0.97); }
+
 .btn-gold-huge:disabled {
     background: #222;
     color: #555;
@@ -454,6 +649,7 @@ h1, h2, h3, .glow-title, .victory-title {
     box-shadow: 0 6px 20px rgba(139, 0, 0, 0.5);
     transition: 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
+
 .btn-blood-huge:active { transform: scale(0.97); }
 
 .center-btn-wrapper {
@@ -472,6 +668,7 @@ h1, h2, h3, .glow-title, .victory-title {
     margin-top: 12px;
     margin-bottom: 15px;
 }
+
 .dist-sub-line { font-size: 0.95rem; color: var(--text-muted); margin-top: 4px; }
 .dist-sub-highlight { font-size: 0.95rem; color: var(--gold-bright); margin-top: 2px; font-style: italic; }
 
@@ -482,6 +679,7 @@ h1, h2, h3, .glow-title, .victory-title {
     justify-content: center;
     margin-bottom: 14px;
 }
+
 .village-landscape-img {
     width: 100%;
     max-height: 180px;
@@ -497,6 +695,7 @@ h1, h2, h3, .glow-title, .victory-title {
     justify-content: center;
     margin: 10px auto 15px auto;
 }
+
 .narrator-card-image {
     width: 190px;
     border-radius: 12px;
@@ -504,7 +703,9 @@ h1, h2, h3, .glow-title, .victory-title {
     box-shadow: 0 8px 30px rgba(212, 175, 55, 0.35);
 }
 
-/* --- ANIMAZIONE CARTA 3D SUSPENSE --- */
+/* ==========================================
+   ANIMAZIONE CARTA 3D SUSPENSE & RETRO/FRONTE
+   ========================================== */
 .card-scene {
     perspective: 1200px;
     -webkit-perspective: 1200px;
@@ -573,6 +774,7 @@ h1, h2, h3, .glow-title, .victory-title {
     backface-visibility: hidden !important;
     -webkit-backface-visibility: hidden !important;
 }
+
 .img-fallback-hidden { display: none !important; }
 
 .card-frame {
@@ -590,11 +792,13 @@ h1, h2, h3, .glow-title, .victory-title {
     backface-visibility: hidden !important;
     -webkit-backface-visibility: hidden !important;
 }
+
 .card-back .card-inner-icon { font-size: 4rem; margin-bottom: 15px; }
 .card-back-text { font-family: 'Cinzel', serif; font-size: 1.2rem; color: var(--gold); letter-spacing: 3px; }
 .tap-hint { margin-top: 30px; font-size: 0.75rem; color: var(--gold-dark); letter-spacing: 2px; }
 .card-front { transform: rotateY(180deg) translateZ(1px); -webkit-transform: rotateY(180deg) translateZ(1px); }
 .card-role-icon { font-size: 4.5rem; margin-bottom: 10px; }
+
 .role-faction-badge {
     background: var(--gold);
     color: #000;
@@ -605,6 +809,7 @@ h1, h2, h3, .glow-title, .victory-title {
     margin: 8px 0 12px 0;
     text-transform: uppercase;
 }
+
 .role-short-desc { font-size: 0.85rem; color: var(--text-muted); font-style: italic; line-height: 1.4; }
 
 .card-caption-banner {
@@ -622,13 +827,16 @@ h1, h2, h3, .glow-title, .victory-title {
     box-shadow: 0 4px 15px rgba(0,0,0,0.6);
 }
 
-/* Notte Caller Box */
+/* ==========================================
+   FASI NOTTE & REGIA NARRATORE
+   ========================================== */
 .night-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
     margin-bottom: 15px;
 }
+
 .night-badge {
     background: var(--blood-red);
     color: #fff;
@@ -637,6 +845,7 @@ h1, h2, h3, .glow-title, .victory-title {
     border-radius: 4px;
     font-size: 0.85rem;
 }
+
 .caller-box {
     background: var(--card-dark);
     border: 1px solid var(--gold-dark);
@@ -645,6 +854,7 @@ h1, h2, h3, .glow-title, .victory-title {
     text-align: center;
     margin-bottom: 16px;
 }
+
 .caller-icon { font-size: 3.2rem; margin-bottom: 6px; }
 .caller-prompt {
     font-style: italic;
@@ -652,6 +862,7 @@ h1, h2, h3, .glow-title, .victory-title {
     margin-top: 10px;
     font-size: 1.05rem;
 }
+
 .caller-target-player { font-size: 0.95rem; color: var(--text-muted); margin-top: 6px; }
 
 /* Action Panel */
@@ -661,6 +872,7 @@ h1, h2, h3, .glow-title, .victory-title {
     gap: 10px;
     margin-bottom: 20px;
 }
+
 .target-btn {
     background: #171b26;
     border: 1px solid var(--card-border);
@@ -672,13 +884,16 @@ h1, h2, h3, .glow-title, .victory-title {
     font-size: 0.95rem;
     transition: 0.15s transform;
 }
+
 .target-btn:active { transform: scale(0.95); }
+
 .target-btn.selected {
     border-color: var(--gold);
     background: var(--gold-dark);
     color: #000;
     font-weight: bold;
 }
+
 .target-btn.disabled {
     opacity: 0.35;
     cursor: not-allowed;
@@ -694,6 +909,7 @@ h1, h2, h3, .glow-title, .victory-title {
     margin-top: 10px;
     margin-bottom: 40px;
 }
+
 .btn-confirm-wide {
     width: 100%;
     max-width: 380px;
@@ -708,6 +924,7 @@ h1, h2, h3, .glow-title, .victory-title {
     gap: 6px;
     margin-top: 10px;
 }
+
 .assassino-role-btn {
     background: #0d0f17;
     border: 1px solid var(--card-border);
@@ -718,7 +935,9 @@ h1, h2, h3, .glow-title, .victory-title {
     cursor: pointer;
     transition: 0.15s;
 }
+
 .assassino-role-btn:active { transform: scale(0.95); }
+
 .assassino-role-btn.selected {
     border-color: var(--gold);
     background: var(--blood-red);
@@ -739,6 +958,7 @@ h1, h2, h3, .glow-title, .victory-title {
     text-align: center;
     margin-bottom: 16px;
 }
+
 .dawn-summary-box {
     background: var(--card-dark);
     border-radius: 8px;
@@ -760,12 +980,14 @@ h1, h2, h3, .glow-title, .victory-title {
     font-weight: bold;
     color: var(--gold-bright);
 }
+
 .voting-grid {
     display: flex;
     flex-direction: column;
     gap: 8px;
     margin-bottom: 16px;
 }
+
 .vote-row {
     background: var(--card-dark);
     border: 1px solid var(--card-border);
@@ -775,6 +997,7 @@ h1, h2, h3, .glow-title, .victory-title {
     justify-content: space-between;
     align-items: center;
 }
+
 .censore-panel {
     background: rgba(212, 175, 55, 0.08);
     border: 1px solid var(--gold-dark);
@@ -783,12 +1006,14 @@ h1, h2, h3, .glow-title, .victory-title {
     text-align: center;
     margin-bottom: 16px;
 }
+
 .censore-title {
     font-family: 'Cinzel', serif;
     font-size: 0.85rem;
     color: var(--gold);
     margin-bottom: 8px;
 }
+
 .referendum-panel {
     background: rgba(139, 0, 0, 0.1);
     border: 1px solid var(--blood-red);
@@ -823,6 +1048,7 @@ h1, h2, h3, .glow-title, .victory-title {
     max-height: 88vh;
     box-shadow: 0 10px 30px rgba(0,0,0,0.8);
 }
+
 .hud-header {
     display: flex;
     justify-content: space-between;
@@ -831,12 +1057,14 @@ h1, h2, h3, .glow-title, .victory-title {
     padding-bottom: 8px;
     margin-bottom: 10px;
 }
+
 .hud-title {
     font-family: 'Cinzel', serif;
     font-size: 0.9rem;
     color: var(--gold);
     font-weight: bold;
 }
+
 .hud-close-mobile { 
     display: none; 
     cursor: pointer; 
@@ -845,6 +1073,7 @@ h1, h2, h3, .glow-title, .victory-title {
     font-size: 1.5rem;
     padding: 4px 8px;
 }
+
 .hud-stats {
     display: flex;
     justify-content: space-between;
@@ -862,6 +1091,7 @@ h1, h2, h3, .glow-title, .victory-title {
     margin-bottom: 12px;
     text-align: center;
 }
+
 .assassin-tracker-label {
     font-family: 'Cinzel', serif;
     font-size: 0.75rem;
@@ -869,6 +1099,7 @@ h1, h2, h3, .glow-title, .victory-title {
     font-weight: bold;
     margin-bottom: 4px;
 }
+
 .assassin-pips {
     font-size: 1rem;
     letter-spacing: 4px;
@@ -881,6 +1112,7 @@ h1, h2, h3, .glow-title, .victory-title {
     overflow-y: auto;
     max-height: 520px;
 }
+
 .hud-row {
     background: #171b26;
     padding: 10px 12px;
@@ -891,12 +1123,14 @@ h1, h2, h3, .glow-title, .victory-title {
     font-size: 0.9rem;
     border-left: 3px solid var(--gold);
 }
+
 .hud-row.dead {
     opacity: 0.35;
     text-decoration: line-through;
     filter: grayscale(1);
     border-left-color: #555;
 }
+
 .mobile-hud-btn {
     display: none;
     position: fixed;
@@ -915,6 +1149,7 @@ h1, h2, h3, .glow-title, .victory-title {
     z-index: 1000;
     transition: 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
+
 .mobile-hud-btn:active { transform: scale(0.92); }
 
 /* --- SCHERMATA VITTORIA MAESTOSA & CENTRATA --- */
@@ -923,6 +1158,7 @@ h1, h2, h3, .glow-title, .victory-title {
     text-align: center;
     padding: 20px 10px;
 }
+
 .victory-icon-frame {
     width: 110px;
     height: 110px;
@@ -935,22 +1171,25 @@ h1, h2, h3, .glow-title, .victory-title {
     background: radial-gradient(circle at center, rgba(212, 175, 55, 0.2) 0%, transparent 70%);
     box-shadow: 0 0 30px rgba(212, 175, 55, 0.4);
 }
+
 .victory-icon-large {
     font-size: 4rem;
     margin: 0;
     line-height: 1;
 }
+
 .victory-title {
     font-size: 1.8rem;
     margin-top: 6px;
 }
+
 .victory-prose {
     font-size: 1.1rem;
     max-width: 440px;
     margin: 15px auto;
 }
 
-/* MODALE EMERGENZA */
+/* MODALE EMERGENZA & MODALI GENERALI */
 .modal-overlay {
     position: fixed;
     top: 0;
@@ -964,6 +1203,7 @@ h1, h2, h3, .glow-title, .victory-title {
     z-index: 3000;
     padding: 20px;
 }
+
 .modal-card {
     background: var(--card-dark);
     border: 2px solid var(--gold);
@@ -973,6 +1213,7 @@ h1, h2, h3, .glow-title, .victory-title {
     max-width: 440px;
     box-shadow: 0 10px 40px rgba(0,0,0,0.9);
 }
+
 .modal-grid-buttons {
     display: grid;
     grid-template-columns: 1fr 1fr;

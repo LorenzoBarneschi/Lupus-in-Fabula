@@ -20,25 +20,121 @@ try {
 }
 
 // ==========================================
-// 1. DATABASE RUOLI & VARIANTI GRAFICHE
+// 1. DATABASE RUOLI, GUIDA STRATEGICA (PDF) & VARIANTI
 // ==========================================
 const rolesDB = [
-    { id: 'lupo', name: 'Lupo', type: 'multiple', faction: 'Lupi', icon: '🐺', desc: 'Di notte cacci col branco scegliendo all\'unanimità chi sbranare.' },
-    { id: 'lupo_alpha', name: 'Lupo Alpha', type: 'unique', faction: 'Lupi', icon: '🐺👑', desc: 'Partecipa al branco e possiede una kill autonoma extra una tantum.' },
-    { id: 'assassino', name: 'Assassino', type: 'unique', faction: 'Solo', icon: '🔪', desc: 'Vince se indovina e uccide il numero richiesto di ruoli esatti.' },
-    { id: 'veggente', name: 'Veggente', type: 'unique', faction: 'Villici', icon: '🔮', desc: 'Ogni notte scopre se un giocatore vivente è un Lupo o Non-Lupo.' },
-    { id: 'medium', name: 'Medium', type: 'unique', faction: 'Villici', icon: '🪦', desc: 'Dalla seconda notte interroga un defunto per scoprirne la categoria.' },
-    { id: 'dama', name: 'Dama', type: 'unique', faction: 'Villici', icon: '💃', desc: 'Protegge un giocatore ogni notte dalla morte (non la stessa persona per 2 notti).' },
-    { id: 'guardia', name: 'Guardia del Corpo', type: 'unique', faction: 'Villici', icon: '🛡️', desc: 'Sorveglia un bersaglio (non sé stessa). Se attaccato lo salva e scopre l\'aggressore.' },
-    { id: 'licantropo', name: 'Licantropo', type: 'unique', faction: 'Villici', icon: '🌕', desc: 'Inizia come villico. Se morso dai Lupi, non muore ma si trasforma in Lupo.' },
-    { id: 'pazzo', name: 'Pazzo', type: 'unique', faction: 'Solo', icon: '🤪', desc: 'Vince immediatamente e da solo se il villaggio lo manda al Rogo!' },
-    { id: 'cieco', name: 'Cieco', type: 'unique', faction: 'Villici', icon: '👁️', desc: 'Confronta due giocatori per scoprire se appartengono alla stessa fazione (max 3 usi).' },
-    { id: 'monaca', name: 'Monaca Silente', type: 'unique', faction: 'Villici', icon: '🙏', desc: 'Protegge un bersaglio dalla condanna al rogo per il giorno successivo (max 2 usi).' },
-    { id: 'cappuccetto', name: 'Cappuccetto Rosso', type: 'unique', faction: 'Villici', icon: '👧', desc: 'La primissima notte scopre l\'identità segreta di uno dei Lupi.' },
-    { id: 'censuratore', name: 'Censuratore', type: 'unique', faction: 'Villici', icon: '🔕', desc: 'Durante il voto diurno può annullare in segreto 1 voto contro un sospettato.' },
-    { id: 'appestato', name: 'Appestato', type: 'unique', faction: 'Villici', icon: '☣️', desc: 'Se sbranato trascina chi lo ha ucciso nella tomba. Muore solo dopo la 3ª notte.' },
-    { id: 'amanti', name: 'Amanti', type: 'unique', faction: 'Villici', icon: '❤️', desc: 'Dormono a turno in una casa. Se attaccati lì muoiono entrambi; a casa vuota sopravvivono!' },
-    { id: 'villico', name: 'Villico', type: 'multiple', faction: 'Villici', icon: '🌾', desc: 'Nessun potere speciale, ma la tua parola e il tuo voto sono fondamentali.' }
+    { 
+        id: 'villico', name: 'Villico', type: 'multiple', faction: 'Villici', icon: '🌾', 
+        desc: 'Nessun potere speciale, ma la tua parola e il tuo voto sono fondamentali.',
+        victory: 'Quando tutti i Lupi sono stati eliminati e l\'Assassino è fuori gioco.',
+        ability: 'Nessuna abilità notturna. Partecipa attivamente alla discussione e al voto del rogo durante il giorno.',
+        tip: 'Sei il ruolo più libero della partita: nessuno ti cerca, nessuno ti teme. Usa questa libertà per osservare, ascoltare e costruire argomenti convincenti. Le partite le vincono spesso i Villici che parlano bene!'
+    },
+    { 
+        id: 'lupo', name: 'Lupo', type: 'multiple', faction: 'Lupi', icon: '🐺', 
+        desc: 'Di notte cacci col branco scegliendo all\'unanimità chi sbranare.',
+        victory: 'Quando i Lupi sono in numero uguale o superiore a tutti gli altri giocatori vivi e l\'Assassino è fuori gioco.',
+        ability: 'Ogni notte tutti i Lupi si risvegliano insieme, si riconoscono e scelgono in segreto una vittima da eliminare all\'unanimità.',
+        tip: 'Di giorno non attirare sospetti: accusa, partecipa, sembrate normali. Di notte coordinatevi senza fare rumore. Il vostro nemico più pericoloso è il Veggente: eliminatelo appena riuscite a individuarlo!'
+    },
+    { 
+        id: 'lupo_alpha', name: 'Lupo Alpha', type: 'unique', faction: 'Lupi', icon: '🐺👑', 
+        desc: 'Partecipa al branco e possiede una kill autonoma extra una tantum.',
+        victory: 'Con i Lupi, stesse condizioni di vittoria.',
+        ability: 'Partecipa alla scelta notturna col branco. In più, può effettuare 1 kill autonoma extra a partita (fino a 10 giocatori) o 2 (da 11+ giocatori).',
+        tip: 'La kill aggiuntiva è preziosa: non sprecarla subito. Il momento giusto è quando hai un bersaglio pericoloso che il branco non vuole colpire, o per creare confusione mandando fuori due giocatori in una sola notte!'
+    },
+    { 
+        id: 'licantropo', name: 'Licantropo', type: 'unique', faction: 'Villici', icon: '🌕', 
+        desc: 'Inizia come villico. Se morso dai Lupi, non muore ma si trasforma in Lupo.',
+        victory: 'Prima della trasformazione vince con i Villici; dopo la trasformazione vince con i Lupi.',
+        ability: 'Inizia la partita come un normale Villico ignaro. Se i Lupi lo attaccano di notte e non è protetto, non muore ma diventa a tutti gli effetti un Lupo.',
+        tip: 'Prima di trasformarti gioca esattamente come un Villico. Dopo la trasformazione dovrai cambiare completamente mentalità e coordinarti col branco senza che nessuno capisca il cambiamento!'
+    },
+    { 
+        id: 'dama', name: 'Dama', type: 'unique', faction: 'Villici', icon: '💃', 
+        desc: 'Protegge un giocatore ogni notte dalla morte (non la stessa persona per 2 notti).',
+        victory: 'Con i Villici.',
+        ability: 'Ogni notte sceglie un giocatore (può scegliere anche sé stessa). Se quel giocatore viene attaccato durante la notte, non muore.',
+        tip: 'Non usare la protezione sempre sulla stessa persona: diventa prevedibile. Prova a intuire chi è il bersaglio più probabile della notte. Proteggere sé stessa è legittimo, soprattutto se pensi di essere scoperta!'
+    },
+    { 
+        id: 'veggente', name: 'Veggente', type: 'unique', faction: 'Villici', icon: '🔮', 
+        desc: 'Ogni notte scopre se un giocatore vivente è un Lupo o Non-Lupo.',
+        victory: 'Con i Villici.',
+        ability: 'Ogni notte indica un giocatore vivo al Narratore e riceve una risposta secca: è un Lupo oppure no.',
+        tip: 'Sei il ruolo più pericoloso per i Lupi e loro lo sanno. Non rivelarti troppo presto o diventi il loro primo bersaglio. Costruisci fiducia gradualmente prima di accusare apertamente!'
+    },
+    { 
+        id: 'medium', name: 'Medium', type: 'unique', faction: 'Villici', icon: '🪦', 
+        desc: 'Dalla seconda notte interroga un defunto per scoprirne la categoria.',
+        victory: 'Con i Villici.',
+        ability: 'Dalla seconda notte può indicare un giocatore già eliminato. Il Narratore gli rivela la categoria di appartenenza: Lupo, Assassino o Altro (Villico/Speciale).',
+        tip: 'Le tue informazioni sono certezze assolute: un morto non mente. Usale per smontare le difese di chi si spaccia per ruoli già morti e smentire i bluff costruiti!'
+    },
+    { 
+        id: 'guardia', name: 'Guardia del Corpo', type: 'unique', faction: 'Villici', icon: '🛡️', 
+        desc: 'Sorveglia un bersaglio (non sé stessa). Se attaccato lo salva e scopre l\'aggressore.',
+        victory: 'Con i Villici.',
+        ability: 'Ogni notte sceglie un giocatore da sorvegliare (non sé stessa, no consecutivi). Se attaccato, non muore e la Guardia scopre il nome esatto dell\'attaccante!',
+        tip: 'Hai il potere più esplosivo del gioco: puoi scoprire un Lupo o l\'Assassino con certezza. Sorveglia i ruoli che si espongono durante il giorno o chi è nel mirino logico dei mostri!'
+    },
+    { 
+        id: 'cieco', name: 'Cieco', type: 'unique', faction: 'Villici', icon: '👁️', 
+        desc: 'Confronta due giocatori per scoprire se appartengono alla stessa fazione (max 3 usi).',
+        victory: 'Con i Villici.',
+        ability: 'Ogni notte può indicare due giocatori. Riceve responso: Stessa Fazione o Fazioni Diverse (max 3 usi, no stessa coppia consecutiva).',
+        tip: 'Non cercare subito i Lupi: costruisci una rete. Se sai che A è buono e A risulta della stessa fazione di B, allora anche B è buono. Puoi mappare mezzo villaggio!'
+    },
+    { 
+        id: 'monaca', name: 'Monaca Silente', type: 'unique', faction: 'Villici', icon: '🙏', 
+        desc: 'Protegge un bersaglio dalla condanna al rogo per il giorno successivo (max 2 usi).',
+        victory: 'Con i Villici.',
+        ability: 'Di notte indica un giocatore. Se viene condannato al rogo il giorno dopo, la condanna fallisce e il giocatore sopravvive anonimamente (max 2 usi).',
+        tip: 'Ogni uso è prezioso: non sprecarlo all\'inizio. Il momento giusto è quando sei quasi certa che il rogo colpirà un innocente chiave o un alleato in pericolo!'
+    },
+    { 
+        id: 'cappuccetto', name: 'Cappuccetto Rosso', type: 'unique', faction: 'Villici', icon: '👧', 
+        desc: 'La primissima notte scopre l\'identità segreta di uno dei Lupi.',
+        victory: 'Con i Villici.',
+        ability: 'Solo durante la prima notte il Narratore le mostra l\'identità di un Lupo a caso (che non sa di essere stato scoperto).',
+        tip: 'Hai una certezza assoluta fin dall\'inizio. Rivelarla subito ti espone come bersaglio; aspettare troppo rischia di farti morire. Trova il momento di svolta per incastrare il Lupo!'
+    },
+    { 
+        id: 'censuratore', name: 'Censuratore', type: 'unique', faction: 'Villici', icon: '🔕', 
+        desc: 'Durante il voto diurno può annullare in segreto 1 voto contro un sospettato.',
+        victory: 'Con i Villici.',
+        ability: 'Agisce dopo il voto diurno a occhi chiusi: sceglie un giocatore e annulla 1 voto a suo carico (non la stessa persona per due turni consecutivi).',
+        tip: 'Il tuo potere è invisibile ma può ribaltare un rogo o salvare un alleato in parità. Usalo con astuzia per salvare chi sta per essere arso ingiustamente!'
+    },
+    { 
+        id: 'appestato', name: 'Appestato', type: 'unique', faction: 'Villici', icon: '☣️', 
+        desc: 'Se sbranato trascina chi lo ha ucciso nella tomba. Muore solo dopo la 3ª notte.',
+        victory: 'Con i Villici.',
+        ability: 'Se viene ucciso di notte dai Lupi o dall\'Assassino, trascina il suo assalitore nella tomba con sé. Se entro la fine della notte 3 non viene attaccato, muore da solo di malattia.',
+        tip: 'Il tempo lavora contro di te: se le prime 3 notti passano senza attacchi, muori da solo. Esporti e renderti un bersaglio appetibile per i lupi è la tua arma migliore!'
+    },
+    { 
+        id: 'amanti', name: 'Amanti', type: 'unique', faction: 'Villici', icon: '❤️', 
+        desc: 'Dormono a turno in una casa. Se attaccati lì muoiono entrambi; a casa vuota sopravvivono!',
+        victory: 'Con i Villici, ma devono sopravvivere entrambi fino alla fine.',
+        ability: 'Due giocatori legati. Ogni notte scelgono in quale casa rifugiarsi insieme: se i lupi attaccano quella casa muoiono entrambi nel sonno; se attaccano la casa vuota l\'attacco fallisce! Se uno muore al rogo, l\'altro muore di crepacuore.',
+        tip: 'Il vostro legame è la vostra forza e debolezza. Difendetevi a vicenda senza farlo capire ai Lupi, altrimenti avranno un bersaglio doppio facilissimo!'
+    },
+    { 
+        id: 'pazzo', name: 'Pazzo', type: 'unique', faction: 'Solo', icon: '🤪', 
+        desc: 'Vince immediatamente e da solo se il villaggio lo manda al Rogo!',
+        victory: 'Vince da solo e subito se mandato al Rogo dal villaggio. Se muore di notte perde. Se sopravvive fino alla vittoria dei Villici, vince con loro.',
+        ability: 'Nessun potere notturno. Il suo scopo è farsi bruciare vivo sulla pira popolare.',
+        tip: 'Stai su un filo sottile: se sei troppo sospetto ti capiscono e non ti votano; se sembri troppo buono ti ignorano. Costruisci lentamente il dubbio su di te e poi fatti condannare!'
+    },
+    { 
+        id: 'assassino', name: 'Assassino', type: 'unique', faction: 'Solo', icon: '🔪', 
+        desc: 'Vince se indovina e uccide il numero richiesto di ruoli esatti.',
+        victory: 'Vince immediatamente e da solo quando raggiunge le kill richieste (2 per 6-8 giocatori, 3 per 9-12, 4 per 13+).',
+        ability: 'Ogni notte sceglie una vittima e ne dichiara il ruolo. Se indovina, la uccide e segna 1 punto; se sbaglia, il suo turno è bloccato la notte dopo.',
+        tip: 'Non colpire a caso! Osserva attentamente le discussioni diurne, studia le difese e colpisci solo quando hai dedotto ruoli certi. Un errore ti costa un turno intero!'
+    }
 ];
 
 const roleImagePool = {
@@ -167,7 +263,7 @@ let currentDistIndex = 0;
 let isCardRevealed = false;
 
 // ==========================================
-// 4. INIZIALIZZAZIONE & AUTO-RECONNECT
+// 4. INIZIALIZZAZIONE & NAVIGAZIONE
 // ==========================================
 function initApp() {
     renderRolesGrid();
@@ -242,7 +338,83 @@ function checkActiveSession() {
 }
 
 // ==========================================
-// 5. MOTORE MULTIPLAYER (ONLINE)
+// 5. GUIDA AI RUOLI & REGOLE (PDF INTERATTIVO)
+// ==========================================
+function openGuideModal() {
+    showGuideListView();
+    const container = document.getElementById('guide-roles-list-view');
+    if (!container) return;
+
+    container.innerHTML = rolesDB.map(r => {
+        let tagClass = 'faction-tag-villici';
+        if (r.faction === 'Lupi') tagClass = 'faction-tag-lupi';
+        else if (r.faction === 'Solo') tagClass = 'faction-tag-solo';
+
+        return `
+            <div class="guide-role-row" onclick="showGuideRoleDetail('${r.id}')">
+                <div class="guide-role-left">
+                    <span class="guide-role-icon">${r.icon}</span>
+                    <span class="guide-role-name">${r.name}</span>
+                </div>
+                <span class="guide-role-faction-tag ${tagClass}">${r.faction}</span>
+            </div>
+        `;
+    }).join('');
+
+    document.getElementById('guide-modal').classList.remove('hidden');
+}
+
+function closeGuideModal() {
+    const modal = document.getElementById('guide-modal');
+    if (modal) modal.classList.add('hidden');
+}
+
+function showGuideListView() {
+    document.getElementById('guide-roles-list-view').classList.remove('hidden');
+    document.getElementById('guide-role-detail-view').classList.add('hidden');
+    document.getElementById('guide-header-main').classList.remove('hidden');
+}
+
+function showGuideRoleDetail(roleId) {
+    const role = rolesDB.find(r => r.id === roleId);
+    if (!role) return;
+
+    document.getElementById('guide-roles-list-view').classList.add('hidden');
+    document.getElementById('guide-header-main').classList.add('hidden');
+    document.getElementById('guide-role-detail-view').classList.remove('hidden');
+
+    const detailContainer = document.getElementById('guide-detail-content');
+    let thumbPath = `assets/${role.id}.png`;
+    if (role.id === 'amanti') thumbPath = 'assets/amanti_1.png';
+
+    detailContainer.innerHTML = `
+        <div class="guide-detail-card">
+            <img src="${thumbPath}" onerror="this.src='assets/${role.id}.png'; this.onerror=function(){this.style.display='none'};" class="guide-detail-thumb" alt="${role.name}">
+            <div>
+                <h3 class="guide-detail-title">${role.icon} ${role.name}</h3>
+                <span style="font-size:0.8rem; color:var(--gold); font-weight:bold;">FAZIONE: ${role.faction.toUpperCase()}</span>
+            </div>
+            
+            <div class="guide-section-box">
+                <div class="guide-section-title">🏆 Come Vinci:</div>
+                <div>${role.victory}</div>
+            </div>
+
+            <div class="guide-section-box">
+                <div class="guide-section-title">⚡ Abilità:</div>
+                <div>${role.ability}</div>
+            </div>
+
+            <div class="guide-section-box guide-tip-box">
+                <div class="guide-section-title">💡 Consiglio Strategico:</div>
+                <div>"${role.tip}"</div>
+            </div>
+        </div>
+    `;
+}
+
+// ==========================================
+// 6. MOTORE MULTIPLAYER (ONLINE)
 // ==========================================
 function generateRoomCode() {
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
@@ -369,7 +541,7 @@ function listenToRoomPlayers(code) {
             } else {
                 document.getElementById('lobby-peers-count').innerText = gameState.players.length;
                 document.getElementById('lobby-peers-list').innerHTML = gameState.players.map(p => `
-                    <div class="player-chip" style="background:#1b2030; border-color:#444; color:#ccc;">
+                    <div class="player-chip" style="background:#171b26; border-color:#444; color:#ccc;">
                         <span>${p}</span>
                     </div>
                 `).join('');
@@ -412,7 +584,6 @@ function showOnlinePlayerCard(data) {
     const frontImg = document.getElementById('online-card-front-image');
     frontImg.classList.remove('img-fallback-hidden');
     
-    // Paracadute intelligente per immagini
     frontImg.onerror = function() {
         if (this.src.indexOf(`assets/${data.role.id}.png`) === -1) {
             this.src = `assets/${data.role.id}.png`;
@@ -500,7 +671,7 @@ async function distributeRolesOnline() {
 }
 
 // ==========================================
-// 6. SETUP LOCALE & GRIGLIA RUOLI
+// 7. SETUP LOCALE & GRIGLIA RUOLI
 // ==========================================
 async function loadSavedPlayersLocal() {
     if (db) {
@@ -684,7 +855,7 @@ function validateDeckOnline() {
 }
 
 // ==========================================
-// 7. ASSEGNAZIONE LOCALE (PASS & PLAY) CON ANTI-SPOILER FLASH
+// 8. ASSEGNAZIONE LOCALE (CON ANTI-LEAK DEFINITIVO)
 // ==========================================
 function startDistributionLocal() {
     gameState.deck = [];
@@ -738,7 +909,8 @@ function startDistributionLocal() {
 
 function renderDistCardLocal() {
     isCardRevealed = false;
-    document.getElementById('player-card-local').classList.remove('flipped');
+    const card = document.getElementById('player-card-local');
+    card.classList.remove('flipped');
     document.getElementById('btn-next-player-local').classList.add('hidden');
     document.getElementById('card-caption-banner-local').classList.add('hidden');
     
@@ -748,11 +920,13 @@ function renderDistCardLocal() {
     document.getElementById('dist-pass-text').innerText = `Passa il telefono a ${p.name}.`;
     document.getElementById('dist-tap-text').innerText = `${p.name}, tocca la carta per rivelarla.`;
 
+    // FIX RADICALE ANTI-SPOILER: Nascondi la faccia anteriore fino al tocco!
+    const frontFace = document.querySelector('#player-card-local .card-front');
+    if (frontFace) frontFace.style.visibility = 'hidden';
+
     const frontImg = document.getElementById('card-front-image-local');
     frontImg.classList.remove('img-fallback-hidden');
-    frontImg.style.visibility = 'hidden'; // FIX ANTI-SPOILER: resta nascosto finché la carta non ruota!
 
-    // FIX DOPPIO PARACADUTE IMMAGINI: Se fallisce la variante, cerca l'immagine base del ruolo
     frontImg.onerror = function() {
         if (this.src.indexOf(`assets/${p.role.id}.png`) === -1) {
             this.src = `assets/${p.role.id}.png`;
@@ -772,8 +946,10 @@ function renderDistCardLocal() {
 
 function flipCardLocal() {
     if (isCardRevealed) return;
-    const frontImg = document.getElementById('card-front-image-local');
-    if (frontImg) frontImg.style.visibility = 'visible';
+    
+    // Rendi visibile il fronte solo nel momento in cui ruota
+    const frontFace = document.querySelector('#player-card-local .card-front');
+    if (frontFace) frontFace.style.visibility = 'visible';
     
     document.getElementById('player-card-local').classList.add('flipped');
     document.getElementById('dist-tap-text').innerText = "Memorizza il ruolo, poi tocca sotto per nascondere.";
@@ -783,9 +959,9 @@ function flipCardLocal() {
 }
 
 function nextPlayerDistributionLocal() {
-    // Nascondi subito visivamente l'immagine per evitare flash
-    const frontImg = document.getElementById('card-front-image-local');
-    if (frontImg) frontImg.style.visibility = 'hidden';
+    // Oscura istantaneamente la faccia anteriore prima che il 3D inverta la carta
+    const frontFace = document.querySelector('#player-card-local .card-front');
+    if (frontFace) frontFace.style.visibility = 'hidden';
 
     currentDistIndex++;
     if (currentDistIndex < gameState.roster.length) {
@@ -796,7 +972,7 @@ function nextPlayerDistributionLocal() {
 }
 
 // ==========================================
-// 8. FASI NARRATORE (DUSK, NIGHT, DAY)
+// 9. FASI NARRATORE (DUSK, NIGHT, DAY)
 // ==========================================
 function narratorStartGame() {
     document.getElementById('mobile-hud-btn').classList.remove('hidden');
@@ -1114,7 +1290,7 @@ function submitNightStep() {
 }
 
 // ==========================================
-// 9. ESITI NOTTE & ALBA
+// 10. ESITI NOTTE & ALBA
 // ==========================================
 function resolveNightOutcomes() {
     let deathsThisNight = [];
@@ -1230,7 +1406,7 @@ function buildDawnScreen(deaths, transformedLycan, plagueTriggered) {
 }
 
 // ==========================================
-// 10. GIORNO, VOTI & REFERENDUM
+// 11. GIORNO, VOTI & REFERENDUM
 // ==========================================
 function startDayDiscussion() {
     switchScreen('screen-day');
@@ -1445,7 +1621,7 @@ function endDayPhase() {
 }
 
 // ==========================================
-// 11. VITTORIA MAESTOSA
+// 12. VITTORIA MAESTOSA
 // ==========================================
 function checkVictoryConditions() {
     const living = gameState.roster.filter(p => p.isAlive);
@@ -1511,28 +1687,8 @@ function showVictory(faction, storyText) {
 }
 
 // ==========================================
-// 12. REGIA MANUALE, GRIMORIO & HUD NARRATORE
+// 13. REGIA MANUALE & HUD NARRATORE
 // ==========================================
-function openGrimorioModal() {
-    const list = document.getElementById('grimorio-roles-list');
-    if (!list) return;
-    list.innerHTML = rolesDB.map(r => `
-        <div class="grimorio-card-item">
-            <div class="g-header">
-                <span class="g-title">${r.icon} ${r.name}</span>
-                <span class="g-faction">Fazione: ${r.faction}</span>
-            </div>
-            <p class="g-desc">${r.desc}</p>
-        </div>
-    `).join('');
-    document.getElementById('grimorio-modal').classList.remove('hidden');
-}
-
-function closeGrimorioModal() {
-    const modal = document.getElementById('grimorio-modal');
-    if (modal) modal.classList.add('hidden');
-}
-
 function openEmergencyModal() { document.getElementById('emergency-modal').classList.remove('hidden'); }
 function closeEmergencyModal() { document.getElementById('emergency-modal').classList.add('hidden'); }
 
