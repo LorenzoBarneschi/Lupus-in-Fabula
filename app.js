@@ -137,12 +137,6 @@ const rolesDB = [
     }
 ];
 
-const roleImagePool = {
-    amanti: ['assets/amanti_1.png', 'assets/amanti_2.png'],
-    lupo: ['assets/lupo_1.png', 'assets/lupo_2.png', 'assets/lupo_3.png', 'assets/lupo_4.png', 'assets/lupo.png'],
-    villico: ['assets/villico_1.png', 'assets/villico_2.png', 'assets/villico_3.png', 'assets/villico_4.png', 'assets/villico_5.png', 'assets/villico.png']
-};
-
 const HUD_ROLE_ORDER = [
     'lupo', 'lupo_alpha', 'assassino', 'veggente', 'medium',
     'dama', 'guardia', 'licantropo', 'pazzo', 'cieco',
@@ -341,6 +335,7 @@ function checkActiveSession() {
 // 5. GUIDA AI RUOLI & REGOLE (PDF INTERATTIVO)
 // ==========================================
 function openGuideModal() {
+    document.body.style.overflow = 'hidden';
     showGuideListView();
     const container = document.getElementById('guide-roles-list-view');
     if (!container) return;
@@ -365,6 +360,7 @@ function openGuideModal() {
 }
 
 function closeGuideModal() {
+    document.body.style.overflow = '';
     const modal = document.getElementById('guide-modal');
     if (modal) modal.classList.add('hidden');
 }
@@ -384,12 +380,16 @@ function showGuideRoleDetail(roleId) {
     document.getElementById('guide-role-detail-view').classList.remove('hidden');
 
     const detailContainer = document.getElementById('guide-detail-content');
+    
+    // Thumbnail sicura: Lupo 1, Villico 1, Amanti 1, oppure id base
     let thumbPath = `assets/${role.id}.png`;
+    if (role.id === 'lupo') thumbPath = 'assets/lupo_1.png';
+    if (role.id === 'villico') thumbPath = 'assets/villico_1.png';
     if (role.id === 'amanti') thumbPath = 'assets/amanti_1.png';
 
     detailContainer.innerHTML = `
         <div class="guide-detail-card">
-            <img src="${thumbPath}" onerror="this.src='assets/${role.id}.png'; this.onerror=function(){this.style.display='none'};" class="guide-detail-thumb" alt="${role.name}">
+            <img src="${thumbPath}" onerror="handleCardImageError(this, '${role.id}')" class="guide-detail-thumb" alt="${role.name}">
             <div>
                 <h3 class="guide-detail-title">${role.icon} ${role.name}</h3>
                 <span style="font-size:0.8rem; color:var(--gold); font-weight:bold;">FAZIONE: ${role.faction.toUpperCase()}</span>
@@ -414,7 +414,20 @@ function showGuideRoleDetail(roleId) {
 }
 
 // ==========================================
-// 6. MOTORE MULTIPLAYER (ONLINE)
+// 6. HELPER PARACADUTE IMMAGINI (3 LIVELLI)
+// ==========================================
+function handleCardImageError(imgEl, roleId) {
+    if (imgEl.src.indexOf(`assets/${roleId}_1.png`) === -1 && (roleId === 'lupo' || roleId === 'villico' || roleId === 'amanti')) {
+        imgEl.src = `assets/${roleId}_1.png`;
+    } else if (imgEl.src.indexOf(`assets/${roleId}.png`) === -1) {
+        imgEl.src = `assets/${roleId}.png`;
+    } else {
+        imgEl.classList.add('img-fallback-hidden');
+    }
+}
+
+// ==========================================
+// 7. MOTORE MULTIPLAYER (ONLINE)
 // ==========================================
 function generateRoomCode() {
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
@@ -583,13 +596,8 @@ function showOnlinePlayerCard(data) {
     
     const frontImg = document.getElementById('online-card-front-image');
     frontImg.classList.remove('img-fallback-hidden');
-    
     frontImg.onerror = function() {
-        if (this.src.indexOf(`assets/${data.role.id}.png`) === -1) {
-            this.src = `assets/${data.role.id}.png`;
-        } else {
-            this.classList.add('img-fallback-hidden');
-        }
+        handleCardImageError(this, data.role.id);
     };
     frontImg.src = data.cardImage;
     
@@ -614,27 +622,26 @@ function flipOnlineCard() {
 
 async function distributeRolesOnline() {
     gameState.deck = [];
-    const wolvesVariants = cryptoShuffle([...(roleImagePool.lupo || [])]);
-    const villiciVariants = cryptoShuffle([...(roleImagePool.villico || [])]);
-    let wolfVarIdx = 0, villicoVarIdx = 0;
 
     for (const [rId, qty] of Object.entries(gameState.selectedRoles)) {
         if (rId === 'amanti' && qty === 2) {
             const roleObj = rolesDB.find(r => r.id === 'amanti');
             gameState.deck.push({ ...roleObj, cardImage: 'assets/amanti_1.png' });
             gameState.deck.push({ ...roleObj, cardImage: 'assets/amanti_2.png' });
+        } else if (rId === 'lupo') {
+            const roleObj = rolesDB.find(r => r.id === 'lupo');
+            for (let i = 0; i < qty; i++) {
+                gameState.deck.push({ ...roleObj, cardImage: `assets/lupo_${i + 1}.png` });
+            }
+        } else if (rId === 'villico') {
+            const roleObj = rolesDB.find(r => r.id === 'villico');
+            for (let i = 0; i < qty; i++) {
+                gameState.deck.push({ ...roleObj, cardImage: `assets/villico_${i + 1}.png` });
+            }
         } else {
             const roleObj = rolesDB.find(r => r.id === rId);
             for (let i = 0; i < qty; i++) {
-                let imgPath = `assets/${rId}.png`;
-                if (rId === 'lupo' && wolvesVariants.length > 0) {
-                    imgPath = wolvesVariants[wolfVarIdx % wolvesVariants.length];
-                    wolfVarIdx++;
-                } else if (rId === 'villico' && villiciVariants.length > 0) {
-                    imgPath = villiciVariants[villicoVarIdx % villiciVariants.length];
-                    villicoVarIdx++;
-                }
-                gameState.deck.push({ ...roleObj, cardImage: imgPath });
+                gameState.deck.push({ ...roleObj, cardImage: `assets/${rId}.png` });
             }
         }
     }
@@ -671,7 +678,7 @@ async function distributeRolesOnline() {
 }
 
 // ==========================================
-// 7. SETUP LOCALE & GRIGLIA RUOLI
+// 8. SETUP LOCALE & GRIGLIA RUOLI
 // ==========================================
 async function loadSavedPlayersLocal() {
     if (db) {
@@ -855,31 +862,30 @@ function validateDeckOnline() {
 }
 
 // ==========================================
-// 8. ASSEGNAZIONE LOCALE (CON ANTI-LEAK DEFINITIVO)
+// 9. ASSEGNAZIONE LOCALE (CON ANTI-LEAK E VARIANTI SEQUENZIALI)
 // ==========================================
 function startDistributionLocal() {
     gameState.deck = [];
-    const wolvesVariants = cryptoShuffle([...(roleImagePool.lupo || [])]);
-    const villiciVariants = cryptoShuffle([...(roleImagePool.villico || [])]);
-    let wolfVarIdx = 0, villicoVarIdx = 0;
 
     for (const [rId, qty] of Object.entries(gameState.selectedRoles)) {
         if (rId === 'amanti' && qty === 2) {
             const roleObj = rolesDB.find(r => r.id === 'amanti');
             gameState.deck.push({ ...roleObj, cardImage: 'assets/amanti_1.png' });
             gameState.deck.push({ ...roleObj, cardImage: 'assets/amanti_2.png' });
+        } else if (rId === 'lupo') {
+            const roleObj = rolesDB.find(r => r.id === 'lupo');
+            for (let i = 0; i < qty; i++) {
+                gameState.deck.push({ ...roleObj, cardImage: `assets/lupo_${i + 1}.png` });
+            }
+        } else if (rId === 'villico') {
+            const roleObj = rolesDB.find(r => r.id === 'villico');
+            for (let i = 0; i < qty; i++) {
+                gameState.deck.push({ ...roleObj, cardImage: `assets/villico_${i + 1}.png` });
+            }
         } else {
             const roleObj = rolesDB.find(r => r.id === rId);
             for (let i = 0; i < qty; i++) {
-                let imgPath = `assets/${rId}.png`;
-                if (rId === 'lupo' && wolvesVariants.length > 0) {
-                    imgPath = wolvesVariants[wolfVarIdx % wolvesVariants.length];
-                    wolfVarIdx++;
-                } else if (rId === 'villico' && villiciVariants.length > 0) {
-                    imgPath = villiciVariants[villicoVarIdx % villiciVariants.length];
-                    villicoVarIdx++;
-                }
-                gameState.deck.push({ ...roleObj, cardImage: imgPath });
+                gameState.deck.push({ ...roleObj, cardImage: `assets/${rId}.png` });
             }
         }
     }
@@ -926,13 +932,8 @@ function renderDistCardLocal() {
 
     const frontImg = document.getElementById('card-front-image-local');
     frontImg.classList.remove('img-fallback-hidden');
-
     frontImg.onerror = function() {
-        if (this.src.indexOf(`assets/${p.role.id}.png`) === -1) {
-            this.src = `assets/${p.role.id}.png`;
-        } else {
-            this.classList.add('img-fallback-hidden');
-        }
+        handleCardImageError(this, p.role.id);
     };
     frontImg.src = p.cardImage;
 
@@ -947,7 +948,6 @@ function renderDistCardLocal() {
 function flipCardLocal() {
     if (isCardRevealed) return;
     
-    // Rendi visibile il fronte solo nel momento in cui ruota
     const frontFace = document.querySelector('#player-card-local .card-front');
     if (frontFace) frontFace.style.visibility = 'visible';
     
@@ -959,7 +959,6 @@ function flipCardLocal() {
 }
 
 function nextPlayerDistributionLocal() {
-    // Oscura istantaneamente la faccia anteriore prima che il 3D inverta la carta
     const frontFace = document.querySelector('#player-card-local .card-front');
     if (frontFace) frontFace.style.visibility = 'hidden';
 
@@ -972,7 +971,7 @@ function nextPlayerDistributionLocal() {
 }
 
 // ==========================================
-// 9. FASI NARRATORE (DUSK, NIGHT, DAY)
+// 10. FASI NARRATORE (DUSK, NIGHT, DAY)
 // ==========================================
 function narratorStartGame() {
     document.getElementById('mobile-hud-btn').classList.remove('hidden');
@@ -1290,7 +1289,7 @@ function submitNightStep() {
 }
 
 // ==========================================
-// 10. ESITI NOTTE & ALBA
+// 11. ESITI NOTTE & ALBA
 // ==========================================
 function resolveNightOutcomes() {
     let deathsThisNight = [];
@@ -1406,7 +1405,7 @@ function buildDawnScreen(deaths, transformedLycan, plagueTriggered) {
 }
 
 // ==========================================
-// 11. GIORNO, VOTI & REFERENDUM
+// 12. GIORNO, VOTI & REFERENDUM
 // ==========================================
 function startDayDiscussion() {
     switchScreen('screen-day');
@@ -1621,7 +1620,7 @@ function endDayPhase() {
 }
 
 // ==========================================
-// 12. VITTORIA MAESTOSA
+// 13. VITTORIA MAESTOSA
 // ==========================================
 function checkVictoryConditions() {
     const living = gameState.roster.filter(p => p.isAlive);
@@ -1687,7 +1686,7 @@ function showVictory(faction, storyText) {
 }
 
 // ==========================================
-// 13. REGIA MANUALE & HUD NARRATORE
+// 14. REGIA MANUALE & HUD NARRATORE
 // ==========================================
 function openEmergencyModal() { document.getElementById('emergency-modal').classList.remove('hidden'); }
 function closeEmergencyModal() { document.getElementById('emergency-modal').classList.add('hidden'); }

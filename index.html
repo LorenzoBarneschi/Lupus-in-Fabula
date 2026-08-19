@@ -31,11 +31,14 @@
                 <button class="btn-emergency" onclick="openEmergencyModal()">⚙️ REGIA / STOP</button>
             </div>
 
-            <!-- SCHERMATA 0: MENU PRINCIPALE (HOME IMMERSIVA E DISTRIBUITA) -->
+            <!-- SCHERMATA 0: MENU PRINCIPALE (HOME IMMERSIVA & ARMONIOSA) -->
             <div id="screen-home" class="screen active screen-home-layout">
                 
+                <!-- BANNER INTEGRATO NATIVAMENTE -->
                 <div class="home-banner-wrapper">
-                    <img src="assets/banner.png" onerror="this.classList.add('hidden'); document.getElementById('home-text-fallback').classList.remove('hidden');" class="home-hero-banner" alt="Lupus in Fabula Banner">
+                    <div class="home-banner-frame">
+                        <img src="assets/banner.png" onerror="this.classList.add('hidden'); document.getElementById('home-text-fallback').classList.remove('hidden');" class="home-hero-banner" alt="Lupus in Fabula Banner">
+                    </div>
                     
                     <div id="home-text-fallback" class="app-imperial-header hidden" style="margin-top: 15px;">
                         <div class="logo-wolf-crest">🐺</div>
@@ -45,23 +48,23 @@
                     </div>
                 </div>
 
-                <!-- I 3 GRANDI PULSANTI DELLA HOME (UNIFORMI E BEN DISTRIBUITI) -->
+                <!-- I 3 GRANDI PULSANTI UNIFORMATI DELLA HOME -->
                 <div class="home-actions-menu">
-                    <button class="home-menu-card btn-online-card" onclick="selectMode('online')">
+                    <button class="home-menu-card" onclick="selectMode('online')">
                         <div class="card-btn-content">
                             <span class="card-btn-title">🌐 GIOCA ONLINE</span>
-                            <span class="card-btn-sub">Stanza Condivisa • Ognuno dal suo telefono</span>
+                            <span class="card-btn-sub">Stanza condivisa • Ognuno dal suo telefono</span>
                         </div>
                     </button>
                     
-                    <button class="home-menu-card btn-local-card" onclick="selectMode('local')">
+                    <button class="home-menu-card" onclick="selectMode('local')">
                         <div class="card-btn-content">
                             <span class="card-btn-title">📱 MODALITÀ LOCALE</span>
                             <span class="card-btn-sub">Classica • Un solo telefono da passarsi</span>
                         </div>
                     </button>
 
-                    <button class="home-menu-card btn-guide-card" onclick="openGuideModal()">
+                    <button class="home-menu-card" onclick="openGuideModal()">
                         <div class="card-btn-content">
                             <span class="card-btn-title">📖 GUIDA RUOLI & REGOLE</span>
                             <span class="card-btn-sub">Consulta abilità, fazioni e strategie</span>
@@ -383,8 +386,8 @@
 
         </div>
 
-        <!-- MODALE GUIDA AI RUOLI & REGOLE (COMPLETA ED ELEGANTE) -->
-        <div id="guide-modal" class="modal-overlay hidden">
+        <!-- MODALE GUIDA AI RUOLI & REGOLE (CON SCROLL FLUIDO ANTI-BLOCCO) -->
+        <div id="guide-modal" class="modal-overlay hidden" onclick="if(event.target === this) closeGuideModal()">
             <div class="modal-card guide-modal-card">
                 
                 <!-- HEADER GUIDA -->

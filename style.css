@@ -27,7 +27,7 @@ body {
     justify-content: center;
     background-image: radial-gradient(circle at 50% 20%, #171b28 0%, var(--bg-dark) 80%);
     
-    padding-top: max(env(safe-area-inset-top, 0px), 24px);
+    padding-top: max(env(safe-area-inset-top, 0px), 20px);
     padding-bottom: max(env(safe-area-inset-bottom, 0px), 20px);
 }
 
@@ -46,7 +46,7 @@ body {
     margin: 0 auto;
     display: flex;
     flex-direction: column;
-    padding-bottom: 30px;
+    padding-bottom: 25px;
 }
 
 /* ==========================================
@@ -55,35 +55,47 @@ body {
 .screen-home-layout {
     display: flex;
     flex-direction: column;
-    justify-content: space-between;
-    min-height: calc(100vh - 80px);
-    padding: 6px 0 16px 0;
+    justify-content: space-evenly;
+    min-height: calc(100vh - 65px);
+    padding: 6px 0 10px 0;
 }
 
 .home-banner-wrapper {
     width: 100%;
+    max-width: 480px;
+    margin: 0 auto 10px auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.home-banner-frame {
+    width: 100%;
+    border-radius: 14px;
+    border: 2px solid var(--gold-dark);
+    box-shadow: 0 12px 35px rgba(0, 0, 0, 0.95), 0 0 20px rgba(212, 175, 55, 0.25);
+    overflow: hidden;
+    background: #0d0f17;
     display: flex;
     justify-content: center;
     align-items: center;
-    margin-top: 4px;
-    margin-bottom: 12px;
 }
 
 .home-hero-banner {
     width: 100%;
-    max-height: 250px;
+    height: auto;
+    max-height: 230px;
     object-fit: cover;
-    border-radius: 12px;
-    border: 1px solid var(--gold-dark);
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.9), 0 0 25px rgba(212, 175, 55, 0.2);
+    display: block;
 }
 
 .home-actions-menu {
     display: flex;
     flex-direction: column;
-    gap: 14px;
+    gap: 12px;
     width: 100%;
-    margin-top: 10px;
+    margin-top: 4px;
 }
 
 .home-menu-card {
@@ -140,18 +152,20 @@ body {
     font-size: 0.72rem;
     color: var(--gold-dark);
     letter-spacing: 2px;
-    margin-top: 16px;
-    opacity: 0.8;
+    margin-top: 10px;
+    opacity: 0.85;
 }
 
 /* ==========================================
-   MODALE GUIDA AI RUOLI & SCHEDE DETTAGLIATE
+   MODALE GUIDA AI RUOLI (SCROLL FLUIDO)
    ========================================== */
 .guide-modal-card {
-    max-height: 88vh;
+    max-height: 86vh;
     display: flex;
     flex-direction: column;
     padding: 18px;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
 }
 
 .guide-modal-header {
@@ -186,6 +200,9 @@ body {
     flex-direction: column;
     gap: 8px;
     padding-right: 2px;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+    touch-action: pan-y;
 }
 
 .guide-role-row {
@@ -242,6 +259,9 @@ body {
     display: flex;
     flex-direction: column;
     gap: 8px;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+    touch-action: pan-y;
 }
 
 .guide-detail-card {
@@ -1202,6 +1222,8 @@ h1, h2, h3, .glow-title, .victory-title {
     align-items: center;
     z-index: 3000;
     padding: 20px;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
 }
 
 .modal-card {
