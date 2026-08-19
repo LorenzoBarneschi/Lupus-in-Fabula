@@ -27,15 +27,15 @@ body {
     justify-content: center;
     background-image: radial-gradient(circle at 50% 20%, #171b28 0%, var(--bg-dark) 80%);
     
-    padding-top: max(env(safe-area-inset-top, 0px), 12px);
-    padding-bottom: max(env(safe-area-inset-bottom, 0px), 16px);
+    padding-top: max(env(safe-area-inset-top, 0px), 10px);
+    padding-bottom: max(env(safe-area-inset-bottom, 0px), 14px);
 }
 
 #main-layout {
     display: flex;
     width: 100%;
     max-width: 1100px;
-    padding: 8px 12px;
+    padding: 6px 12px;
     gap: 20px;
     position: relative;
 }
@@ -46,18 +46,18 @@ body {
     margin: 0 auto;
     display: flex;
     flex-direction: column;
-    padding-bottom: 20px;
+    padding-bottom: 16px;
 }
 
 /* ==========================================
-   LAYOUT HOME SCREEN (PORTALE DEL BORGO)
+   LAYOUT HOME SCREEN (PORTALE NOBILE DEL BORGO)
    ========================================== */
 .screen-home-layout {
     display: flex;
     flex-direction: column;
     justify-content: space-between;
-    min-height: calc(100vh - 45px);
-    padding: 0 0 8px 0;
+    min-height: calc(100vh - 35px);
+    padding: 0 0 6px 0;
 }
 
 .home-banner-wrapper {
@@ -85,32 +85,32 @@ body {
 .home-hero-banner {
     width: 100%;
     height: auto;
-    max-height: 215px;
+    max-height: 200px;
     object-fit: cover;
     display: block;
 }
 
-/* 3 SCHEDE NOBILIARI DI AZIONE */
+/* 3 GRANDI SCHEDE NOBILIARI DI AZIONE */
 .home-actions-menu {
     display: flex;
     flex-direction: column;
     gap: 10px;
     width: 100%;
-    margin-top: 2px;
-    margin-bottom: 8px;
+    margin-top: 4px;
+    margin-bottom: 6px;
 }
 
 .home-menu-card {
-    background: linear-gradient(135deg, rgba(212, 175, 55, 0.14) 0%, rgba(18, 21, 31, 0.96) 100%);
-    border: 1px solid var(--gold);
-    border-radius: 10px;
+    background: linear-gradient(135deg, rgba(212, 175, 55, 0.18) 0%, rgba(30, 22, 14, 0.95) 50%, rgba(14, 17, 24, 0.98) 100%);
+    border: 1.5px solid var(--gold);
+    border-radius: 12px;
     padding: 12px 14px;
     cursor: pointer;
     width: 100%;
     display: flex;
     align-items: center;
     gap: 14px;
-    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.6);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.75), inset 0 1px 0 rgba(255, 255, 255, 0.1);
     transition: 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
     user-select: none;
     text-align: left;
@@ -122,35 +122,35 @@ body {
 }
 
 .card-seal-wrapper {
-    width: 44px;
-    height: 44px;
-    min-width: 44px;
+    width: 48px;
+    height: 48px;
+    min-width: 48px;
     border-radius: 50%;
-    background: radial-gradient(circle at center, rgba(212, 175, 55, 0.3) 0%, rgba(0, 0, 0, 0.6) 80%);
-    border: 1.5px solid var(--gold);
+    background: radial-gradient(circle at center, rgba(212, 175, 55, 0.35) 0%, rgba(0, 0, 0, 0.7) 80%);
+    border: 2px solid var(--gold);
     display: flex;
     justify-content: center;
     align-items: center;
-    box-shadow: 0 0 10px rgba(212, 175, 55, 0.3);
+    box-shadow: 0 0 12px rgba(212, 175, 55, 0.35);
 }
 
 .card-icon-seal {
-    font-size: 1.4rem;
+    font-size: 1.5rem;
 }
 
 .card-btn-content {
     display: flex;
     flex-direction: column;
-    gap: 2px;
+    gap: 3px;
     flex: 1;
 }
 
 .card-btn-title {
     font-family: 'Cinzel', serif;
-    font-size: 0.98rem;
+    font-size: 1.02rem;
     font-weight: 900;
     color: var(--gold-bright);
-    letter-spacing: 1px;
+    letter-spacing: 1.5px;
 }
 
 .home-menu-card:active .card-btn-title {
@@ -159,74 +159,107 @@ body {
 
 .card-btn-sub {
     font-family: 'Lora', serif;
-    font-size: 0.74rem;
+    font-size: 0.75rem;
     color: var(--text-muted);
-    line-height: 1.25;
+    line-height: 1.3;
 }
 
 .home-menu-card:active .card-btn-sub {
     color: #1a1a1a;
 }
 
-/* PERGAMENA NARRATIVA D'ATMOSFERA */
-.home-lore-parchment {
-    background: radial-gradient(circle at center, rgba(212, 175, 55, 0.08) 0%, rgba(13, 16, 24, 0.95) 100%);
-    border: 1px solid var(--gold-dark);
-    border-radius: 8px;
-    padding: 10px 14px;
-    margin: 4px 0;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+/* VERA PERGAMENA MEDIEVALE APERTA */
+.ancient-parchment-scroll {
+    display: flex;
+    align-items: stretch;
+    width: 100%;
+    margin: 6px 0;
+    position: relative;
+    filter: drop-shadow(0 6px 18px rgba(0, 0, 0, 0.8));
 }
 
-.lore-parchment-inner {
+.scroll-body {
+    flex: 1;
+    background: radial-gradient(ellipse at center, #2e2315 0%, #1c150c 100%);
+    border-top: 1.5px solid var(--gold);
+    border-bottom: 1.5px solid var(--gold);
+    padding: 12px 14px;
+    position: relative;
     display: flex;
     align-items: center;
     justify-content: center;
     text-align: center;
-    position: relative;
-    gap: 4px;
 }
 
-.lore-quote-icon, .lore-quote-icon-right {
+.scroll-curl-left, .scroll-curl-right {
+    width: 14px;
+    min-width: 14px;
+    background: linear-gradient(to right, #8c6d23, #d4af37, #594212);
+    border-radius: 4px;
+    box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.8), 0 0 8px rgba(212, 175, 55, 0.3);
+    position: relative;
+}
+
+.scroll-quote-mark, .scroll-quote-mark-end {
     font-family: 'Cinzel', serif;
-    font-size: 1.6rem;
+    font-size: 1.8rem;
     color: var(--gold);
     line-height: 1;
-    opacity: 0.6;
+    opacity: 0.7;
+    margin: 0 4px;
 }
 
 .lore-text {
     font-family: 'Lora', serif;
-    font-size: 0.82rem;
+    font-size: 0.86rem;
     font-style: italic;
-    color: #f0e6d2;
+    color: #f7ebd2;
     line-height: 1.35;
     margin: 0;
-    padding: 0 4px;
 }
 
 /* TICKER PILLOLA DEL VILLAGGIO */
 .home-tip-ticker {
-    background: rgba(23, 27, 38, 0.85);
-    border: 1px dashed var(--gold-dark);
-    border-radius: 6px;
-    padding: 8px 12px;
+    background: linear-gradient(135deg, rgba(28, 22, 14, 0.9) 0%, rgba(17, 20, 29, 0.95) 100%);
+    border: 1.5px dashed var(--gold);
+    border-radius: 8px;
+    padding: 10px 14px;
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 12px;
     cursor: pointer;
     user-select: none;
     transition: 0.15s;
-    margin-top: 4px;
+    margin-top: 2px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
 }
 
 .home-tip-ticker:active {
-    background: rgba(212, 175, 55, 0.15);
+    background: rgba(212, 175, 55, 0.2);
     border-style: solid;
 }
 
-.tip-spark {
-    font-size: 1.1rem;
+.tip-spark-badge {
+    font-size: 1.3rem;
+    min-width: 28px;
+    display: flex;
+    justify-content: center;
+}
+
+.tip-text-content {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    text-align: left;
+}
+
+.tip-badge-title {
+    font-family: 'Cinzel', serif;
+    font-size: 0.68rem;
+    font-weight: bold;
+    color: var(--gold);
+    letter-spacing: 1px;
+    text-transform: uppercase;
 }
 
 .tip-text {
@@ -241,8 +274,8 @@ body {
     font-size: 0.68rem;
     color: var(--gold-dark);
     letter-spacing: 2px;
-    margin-top: 6px;
-    opacity: 0.8;
+    margin-top: 4px;
+    opacity: 0.85;
 }
 
 /* ==========================================

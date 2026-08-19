@@ -13,7 +13,7 @@
     <meta name="apple-mobile-web-app-title" content="Lupus">
 
     <link rel="stylesheet" href="style.css">
-    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;900&family=Lora:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;900&family=Lora:ital,wght@0,400;0,600;1,400;1,600&display=swap" rel="stylesheet">
 
     <!-- Firebase SDK Compatibile (CDN) -->
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
@@ -48,7 +48,7 @@
                     </div>
                 </div>
 
-                <!-- 2. LE 3 SCHEDE NOBILIARI DI AZIONE -->
+                <!-- 2. LE 3 GRANDI SCHEDE NOBILIARI DI AZIONE -->
                 <div class="home-actions-menu">
                     <!-- BOTTONE ONLINE -->
                     <button class="home-menu-card" onclick="selectMode('online')">
@@ -57,7 +57,7 @@
                         </div>
                         <div class="card-btn-content">
                             <span class="card-btn-title">GIOCA ONLINE</span>
-                            <span class="card-btn-sub">Stanza con codice • Ognuno scopre il ruolo dal proprio smartphone</span>
+                            <span class="card-btn-sub">Crea o unisciti a una stanza con codice a 4 lettere. Ciascun giocatore scopre il proprio ruolo segreto dal proprio smartphone.</span>
                         </div>
                     </button>
                     
@@ -68,7 +68,7 @@
                         </div>
                         <div class="card-btn-content">
                             <span class="card-btn-title">MODALITÀ LOCALE</span>
-                            <span class="card-btn-sub">Classica Pass & Play • Un solo dispositivo passato di mano in mano</span>
+                            <span class="card-btn-sub">La classica esperienza attorno al tavolo: il Narratore assegna e passa l'unico dispositivo a ogni giocatore a turno.</span>
                         </div>
                     </button>
 
@@ -79,24 +79,29 @@
                         </div>
                         <div class="card-btn-content">
                             <span class="card-btn-title">GUIDA RUOLI & REGOLE</span>
-                            <span class="card-btn-sub">Enciclopedia dei 16 ruoli, abilità speciali e consigli strategici</span>
+                            <span class="card-btn-sub">Consulta il compendio completo dei 16 ruoli con fazioni, abilità speciali, condizioni di vittoria e consigli strategici.</span>
                         </div>
                     </button>
                 </div>
 
-                <!-- 3. PERGAMENA NARRATIVA D'ATMOSFERA -->
-                <div class="home-lore-parchment">
-                    <div class="lore-parchment-inner">
-                        <span class="lore-quote-icon">“</span>
+                <!-- 3. VERA PERGAMENA MEDIEVALE APERTA D'ATMOSFERA -->
+                <div class="ancient-parchment-scroll">
+                    <div class="scroll-curl-left"></div>
+                    <div class="scroll-body">
+                        <span class="scroll-quote-mark">“</span>
                         <p class="lore-text" id="home-lore-text">Il silenzio cala sulla piazza di pietra. Chi tra voi nasconde zanne affilate nel buio?</p>
-                        <span class="lore-quote-icon-right">”</span>
+                        <span class="scroll-quote-mark-end">”</span>
                     </div>
+                    <div class="scroll-curl-right"></div>
                 </div>
 
-                <!-- 4. TICKER PILLOLA DEL VILLAGGIO -->
+                <!-- 4. TICKER PILLOLA DEL VILLAGGIO PIÙ CORPOSO -->
                 <div class="home-tip-ticker" onclick="rotateHomeTip()">
-                    <span class="tip-spark">💡</span>
-                    <span class="tip-text" id="home-tip-text">Sapevi che? L'Appestato, se non viene attaccato entro la Notte 3, muore da solo.</span>
+                    <div class="tip-spark-badge">💡</div>
+                    <div class="tip-text-content">
+                        <span class="tip-badge-title">PILLOLA DI LUPUS</span>
+                        <span class="tip-text" id="home-tip-text">Sapevi che? L'Appestato, se non viene attaccato entro la Notte 3, muore da solo di malattia.</span>
+                    </div>
                 </div>
 
                 <!-- 5. FIRMA IN FONDO -->
