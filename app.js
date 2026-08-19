@@ -411,7 +411,15 @@ function showOnlinePlayerCard(data) {
     
     const frontImg = document.getElementById('online-card-front-image');
     frontImg.classList.remove('img-fallback-hidden');
-    frontImg.onerror = function() { this.classList.add('img-fallback-hidden'); };
+    
+    // Paracadute intelligente per immagini
+    frontImg.onerror = function() {
+        if (this.src.indexOf(`assets/${data.role.id}.png`) === -1) {
+            this.src = `assets/${data.role.id}.png`;
+        } else {
+            this.classList.add('img-fallback-hidden');
+        }
+    };
     frontImg.src = data.cardImage;
     
     document.getElementById('online-card-role-icon').innerText = data.role.icon;
@@ -676,7 +684,7 @@ function validateDeckOnline() {
 }
 
 // ==========================================
-// 7. ASSEGNAZIONE LOCALE (PASS & PLAY)
+// 7. ASSEGNAZIONE LOCALE (PASS & PLAY) CON ANTI-SPOILER FLASH
 // ==========================================
 function startDistributionLocal() {
     gameState.deck = [];
@@ -742,7 +750,16 @@ function renderDistCardLocal() {
 
     const frontImg = document.getElementById('card-front-image-local');
     frontImg.classList.remove('img-fallback-hidden');
-    frontImg.onerror = function() { this.classList.add('img-fallback-hidden'); };
+    frontImg.style.visibility = 'hidden'; // FIX ANTI-SPOILER: resta nascosto finché la carta non ruota!
+
+    // FIX DOPPIO PARACADUTE IMMAGINI: Se fallisce la variante, cerca l'immagine base del ruolo
+    frontImg.onerror = function() {
+        if (this.src.indexOf(`assets/${p.role.id}.png`) === -1) {
+            this.src = `assets/${p.role.id}.png`;
+        } else {
+            this.classList.add('img-fallback-hidden');
+        }
+    };
     frontImg.src = p.cardImage;
 
     document.getElementById('card-role-icon-local').innerText = p.role.icon;
@@ -755,6 +772,9 @@ function renderDistCardLocal() {
 
 function flipCardLocal() {
     if (isCardRevealed) return;
+    const frontImg = document.getElementById('card-front-image-local');
+    if (frontImg) frontImg.style.visibility = 'visible';
+    
     document.getElementById('player-card-local').classList.add('flipped');
     document.getElementById('dist-tap-text').innerText = "Memorizza il ruolo, poi tocca sotto per nascondere.";
     document.getElementById('btn-next-player-local').classList.remove('hidden');
@@ -763,6 +783,10 @@ function flipCardLocal() {
 }
 
 function nextPlayerDistributionLocal() {
+    // Nascondi subito visivamente l'immagine per evitare flash
+    const frontImg = document.getElementById('card-front-image-local');
+    if (frontImg) frontImg.style.visibility = 'hidden';
+
     currentDistIndex++;
     if (currentDistIndex < gameState.roster.length) {
         renderDistCardLocal();
@@ -1487,8 +1511,28 @@ function showVictory(faction, storyText) {
 }
 
 // ==========================================
-// 12. REGIA MANUALE & HUD NARRATORE
+// 12. REGIA MANUALE, GRIMORIO & HUD NARRATORE
 // ==========================================
+function openGrimorioModal() {
+    const list = document.getElementById('grimorio-roles-list');
+    if (!list) return;
+    list.innerHTML = rolesDB.map(r => `
+        <div class="grimorio-card-item">
+            <div class="g-header">
+                <span class="g-title">${r.icon} ${r.name}</span>
+                <span class="g-faction">Fazione: ${r.faction}</span>
+            </div>
+            <p class="g-desc">${r.desc}</p>
+        </div>
+    `).join('');
+    document.getElementById('grimorio-modal').classList.remove('hidden');
+}
+
+function closeGrimorioModal() {
+    const modal = document.getElementById('grimorio-modal');
+    if (modal) modal.classList.add('hidden');
+}
+
 function openEmergencyModal() { document.getElementById('emergency-modal').classList.remove('hidden'); }
 function closeEmergencyModal() { document.getElementById('emergency-modal').classList.add('hidden'); }
 

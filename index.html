@@ -31,31 +31,40 @@
                 <button class="btn-emergency" onclick="openEmergencyModal()">⚙️ REGIA / STOP</button>
             </div>
 
-            <!-- SCHERMATA 0: MENU PRINCIPALE (SCELTA MODALITA') -->
+            <!-- SCHERMATA 0: MENU PRINCIPALE CON BANNER ARTISTICO -->
             <div id="screen-home" class="screen active">
-                <header class="app-imperial-header" style="margin-top: 20px;">
-                    <div class="logo-wolf-crest">🐺</div>
-                    <h1 class="imperial-title">LUPUS IN FABULA</h1>
-                    <div class="title-separator"><span>✦</span> ✦ <span>✦</span></div>
-                    <p class="subtitle">IL VILLAGGIO ATTENDE IL SUO DESTINO</p>
-                </header>
+                <div class="home-banner-container">
+                    <img src="assets/banner.png" onerror="this.classList.add('hidden'); document.getElementById('home-text-fallback').classList.remove('hidden');" class="home-hero-banner" alt="Lupus in Fabula Banner">
+                    
+                    <!-- Fallback nel caso in cui l'immagine non sia ancora stata salvata -->
+                    <div id="home-text-fallback" class="app-imperial-header hidden" style="margin-top: 20px;">
+                        <div class="logo-wolf-crest">🐺</div>
+                        <h1 class="imperial-title">LUPUS IN FABULA</h1>
+                        <div class="title-separator"><span>✦</span> ✦ <span>✦</span></div>
+                        <p class="subtitle">IL VILLAGGIO ATTENDE IL SUO DESTINO</p>
+                    </div>
+                </div>
 
-                <div class="center-btn-wrapper" style="flex-direction: column; gap: 20px; margin-top: 30px;">
+                <div class="center-btn-wrapper" style="flex-direction: column; gap: 14px; margin-top: 20px;">
                     <button class="btn-gold-huge" onclick="selectMode('online')">
                         🌐 GIOCA ONLINE (STANZA CONDIVISA)
-                        <small style="display:block; font-size:0.75rem; color:#333; margin-top:4px;">Ognuno vede il ruolo dal proprio telefono</small>
+                        <small style="display:block; font-size:0.75rem; color:#222; margin-top:4px; font-weight:bold;">Ognuno vede il ruolo dal proprio telefono</small>
                     </button>
                     
-                    <button class="btn-gold-action" style="padding: 16px; font-size:1rem;" onclick="selectMode('local')">
+                    <button class="btn-gold-action" style="padding: 15px; font-size:0.95rem;" onclick="selectMode('local')">
                         📱 MODALITÀ CLASSICA LOCALE
-                        <small style="display:block; font-size:0.75rem; color:#222; margin-top:4px;">Un solo telefono da passarsi di mano in mano</small>
+                        <small style="display:block; font-size:0.72rem; color:#222; margin-top:3px;">Un solo telefono da passarsi di mano in mano</small>
+                    </button>
+
+                    <!-- Nuovo Pulsante per il Grimorio / Guida -->
+                    <button class="btn-grimorio" onclick="openGrimorioModal()">
+                        📖 GRIMORIO DEI RUOLI & REGOLE
                     </button>
                 </div>
             </div>
 
             <!-- SCHERMATA 1 (LOCALE): SETUP TRADIZIONALE -->
             <div id="screen-setup-local" class="screen">
-                <!-- Pulsante Indietro -->
                 <div class="btn-back-nav" onclick="goHomeFromSetup()">🔙 INDIETRO</div>
 
                 <header class="app-imperial-header">
@@ -91,7 +100,6 @@
 
             <!-- SCHERMATA ONLINE 1: AUTENTICAZIONE E SCELTA (CREA O ENTRA) -->
             <div id="screen-online-auth" class="screen">
-                <!-- Pulsante Indietro -->
                 <div class="btn-back-nav" onclick="goHomeFromSetup()">🔙 INDIETRO</div>
 
                 <header class="app-imperial-header">
@@ -123,7 +131,6 @@
 
             <!-- SCHERMATA ONLINE 2A: LOBBY NARRATORE -->
             <div id="screen-online-lobby-narrator" class="screen">
-                <!-- Pulsante Elimina Stanza -->
                 <div class="btn-back-nav" style="color:#ff5555;" onclick="abortOnlineRoom()">✖ ELIMINA STANZA</div>
 
                 <header class="app-imperial-header">
@@ -155,7 +162,6 @@
 
             <!-- SCHERMATA ONLINE 2B: LOBBY GIOCATORE -->
             <div id="screen-online-lobby-player" class="screen">
-                <!-- Pulsante Esci -->
                 <div class="btn-back-nav" onclick="leaveOnlineRoom()">🚪 ESCI DALLA STANZA</div>
 
                 <header class="app-imperial-header" style="margin-top: 40px;">
@@ -195,7 +201,7 @@
                             </div>
                         </div>
                         <div class="card-face card-front">
-                            <img id="online-card-front-image" src="" onerror="this.classList.add('img-fallback-hidden')" class="card-image-layer" alt="Carta Ruolo">
+                            <img id="online-card-front-image" src="" class="card-image-layer" alt="Carta Ruolo">
                             <div class="card-frame fallback-layer">
                                 <div class="card-role-icon" id="online-card-role-icon">🌾</div>
                                 <h3 id="online-card-role-name">VILLICO</h3>
@@ -236,7 +242,7 @@
                             </div>
                         </div>
                         <div class="card-face card-front">
-                            <img id="card-front-image-local" src="assets/villico.png" onerror="this.classList.add('img-fallback-hidden')" class="card-image-layer" alt="Carta Ruolo">
+                            <img id="card-front-image-local" src="" class="card-image-layer" alt="Carta Ruolo">
                             <div class="card-frame fallback-layer">
                                 <div class="card-role-icon" id="card-role-icon-local">🌾</div>
                                 <h3 id="card-role-name-local">VILLICO</h3>
@@ -366,6 +372,19 @@
 
         </div>
 
+        <!-- MODALE GRIMORIO DEI RUOLI (ENCICLOPEDIA) -->
+        <div id="grimorio-modal" class="modal-overlay hidden">
+            <div class="modal-card" style="max-height: 85vh; display: flex; flex-direction: column;">
+                <div style="display:flex; justify-content:space-between; align-items:center; border-bottom: 1px solid var(--gold-dark); padding-bottom:8px; margin-bottom: 10px;">
+                    <h2 class="glow-title" style="font-size:1.15rem; margin:0;">📖 Grimorio dei Ruoli</h2>
+                    <span style="font-size:1.5rem; cursor:pointer; color:#ff5555;" onclick="closeGrimorioModal()">✕</span>
+                </div>
+                <div id="grimorio-roles-list" style="overflow-y:auto; flex:1; display:flex; flex-direction:column; gap:10px; padding-right:4px;">
+                    <!-- Generato dinamicamente -->
+                </div>
+            </div>
+        </div>
+
         <!-- OVERLAY E SIDEBAR HUD DEL NARRATORE -->
         <div id="hud-backdrop" class="hud-backdrop hidden" onclick="toggleMobileHUD(false)"></div>
 
@@ -389,7 +408,6 @@
             📜 REGISTRO
         </button>
 
-        <!-- MODALE EMERGENZA -->
         <div id="emergency-modal" class="modal-overlay hidden">
             <div class="modal-card">
                 <h2 class="glow-title" style="font-size:1.3rem;">Menu Regia Narratore</h2>
