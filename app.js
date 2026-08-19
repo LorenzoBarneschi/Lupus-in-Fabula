@@ -145,8 +145,33 @@ const HUD_ROLE_ORDER = [
 ];
 
 // ==========================================
-// 2. LIBRERIA NARRATIVA & SHUFFLE-BAG
+// 2. LIBRERIE TESTI & ATMOSFERA
 // ==========================================
+const HOME_LORE_QUOTES = [
+    "Il silenzio cala sulla piazza di pietra. Chi tra voi nasconde zanne affilate nel buio?",
+    "Le porte del villaggio vengono serrate con catene. Nessuno è al sicuro stanotte...",
+    "Un ululato lontano rompe il gelo della notte. La caccia ha inizio...",
+    "Fidati delle parole, ma osserva gli sguardi. Il male si nasconde tra gli innocenti.",
+    "Le prime luci dell'alba riveleranno chi non vedrà mai più il sole.",
+    "La legna della pira è già accatastata. Il villaggio attende il suo colpevole.",
+    "I sussurri corrono tra i vicoli deserti. Chi mente con più convinzione sopravviverà.",
+    "Non tutti gli occhi chiusi stanno dormendo stanotte..."
+];
+
+const HOME_RULE_TIPS = [
+    "Sapevi che? L'Appestato, se non viene attaccato entro la Notte 3, muore da solo di malattia.",
+    "Sapevi che? Il Veggente scopre se un vivo è Lupo o Non-Lupo, ma non conosce il ruolo specifico.",
+    "Sapevi che? Se l'Assassino sbaglia a indovinare un ruolo, il suo turno è bloccato per la notte successiva.",
+    "Sapevi che? La Guardia del Corpo salva la vittima e scopre il nome esatto dell'aggressore!",
+    "Sapevi che? Il Licantropo inizia come normale Villico e diventa Lupo solo se morso dal branco.",
+    "Sapevi che? Gli Amanti dormono a turno in una casa: se i lupi attaccano la casa vuota, falliscono l'attacco!",
+    "Sapevi che? Il Pazzo vince immediatamente da solo se il villaggio lo manda al Rogo popolare.",
+    "Sapevi che? Il Cieco può confrontare due giocatori per scoprire se appartengono alla stessa fazione (max 3 usi).",
+    "Sapevi che? La Monaca Silente può salvare un sospettato dalla condanna al rogo del giorno dopo (max 2 usi).",
+    "Sapevi che? Il Censuratore può annullare segretamente 1 voto contro un sospettato durante il rogo.",
+    "Sapevi che? Il Lupo Alpha possiede un attacco letale autonomo extra oltre a quello del branco."
+];
+
 const NARRATION_MASTER_LIB = {
     dusk: [
         "Il sole scompare dietro le creste montuose. Le porte vengono serrate con pesanti catene: cala la notte, chiudete tutti gli occhi...",
@@ -255,6 +280,7 @@ let onlineState = {
 
 let currentDistIndex = 0;
 let isCardRevealed = false;
+let currentTipIdx = 0;
 
 // ==========================================
 // 4. INIZIALIZZAZIONE & NAVIGAZIONE
@@ -263,7 +289,26 @@ function initApp() {
     renderRolesGrid();
     loadSavedPlayersLocal();
     setupSwipeGesture();
+    initHomeAtmosphere();
     checkActiveSession();
+}
+
+function initHomeAtmosphere() {
+    const loreEl = document.getElementById('home-lore-text');
+    if (loreEl) {
+        const randomLore = HOME_LORE_QUOTES[Math.floor(Math.random() * HOME_LORE_QUOTES.length)];
+        loreEl.innerText = randomLore;
+    }
+    currentTipIdx = Math.floor(Math.random() * HOME_RULE_TIPS.length);
+    rotateHomeTip();
+}
+
+function rotateHomeTip() {
+    const tipEl = document.getElementById('home-tip-text');
+    if (tipEl) {
+        tipEl.innerText = HOME_RULE_TIPS[currentTipIdx % HOME_RULE_TIPS.length];
+        currentTipIdx++;
+    }
 }
 
 function selectMode(mode) {
@@ -286,6 +331,7 @@ function goHomeFromSetup() {
     if(onlineState.unsubscribeRoom) onlineState.unsubscribeRoom();
     if(onlineState.unsubscribePlayers) onlineState.unsubscribePlayers();
     localStorage.removeItem('lupus_online_session');
+    initHomeAtmosphere();
     switchScreen('screen-home');
 }
 
@@ -381,7 +427,6 @@ function showGuideRoleDetail(roleId) {
 
     const detailContainer = document.getElementById('guide-detail-content');
     
-    // Thumbnail sicura: Lupo 1, Villico 1, Amanti 1, oppure id base
     let thumbPath = `assets/${role.id}.png`;
     if (role.id === 'lupo') thumbPath = 'assets/lupo_1.png';
     if (role.id === 'villico') thumbPath = 'assets/villico_1.png';
@@ -531,6 +576,7 @@ function forceKickToHome(msg) {
     onlineState.playerName = null;
     onlineState.isNarrator = false;
     gameState.players = [];
+    initHomeAtmosphere();
     switchScreen('screen-home');
 }
 
@@ -1708,6 +1754,7 @@ function abortGameConfirm() {
         if(onlineState.unsubscribeRoom) onlineState.unsubscribeRoom();
         if(onlineState.unsubscribePlayers) onlineState.unsubscribePlayers();
         
+        initHomeAtmosphere();
         switchScreen('screen-home');
     }
 }

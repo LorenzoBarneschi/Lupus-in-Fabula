@@ -31,16 +31,16 @@
                 <button class="btn-emergency" onclick="openEmergencyModal()">⚙️ REGIA / STOP</button>
             </div>
 
-            <!-- SCHERMATA 0: MENU PRINCIPALE (HOME IMMERSIVA & ARMONIOSA) -->
+            <!-- SCHERMATA 0: MENU PRINCIPALE (PORTALE NOBILE DEL BORGO) -->
             <div id="screen-home" class="screen active screen-home-layout">
                 
-                <!-- BANNER INTEGRATO NATIVAMENTE -->
+                <!-- 1. BANNER ANCORATO IN ALTO -->
                 <div class="home-banner-wrapper">
                     <div class="home-banner-frame">
                         <img src="assets/banner.png" onerror="this.classList.add('hidden'); document.getElementById('home-text-fallback').classList.remove('hidden');" class="home-hero-banner" alt="Lupus in Fabula Banner">
                     </div>
                     
-                    <div id="home-text-fallback" class="app-imperial-header hidden" style="margin-top: 15px;">
+                    <div id="home-text-fallback" class="app-imperial-header hidden" style="margin-top: 10px;">
                         <div class="logo-wolf-crest">🐺</div>
                         <h1 class="imperial-title">LUPUS IN FABULA</h1>
                         <div class="title-separator"><span>✦</span> ✦ <span>✦</span></div>
@@ -48,30 +48,58 @@
                     </div>
                 </div>
 
-                <!-- I 3 GRANDI PULSANTI UNIFORMATI DELLA HOME -->
+                <!-- 2. LE 3 SCHEDE NOBILIARI DI AZIONE -->
                 <div class="home-actions-menu">
+                    <!-- BOTTONE ONLINE -->
                     <button class="home-menu-card" onclick="selectMode('online')">
+                        <div class="card-seal-wrapper">
+                            <span class="card-icon-seal">🌐</span>
+                        </div>
                         <div class="card-btn-content">
-                            <span class="card-btn-title">🌐 GIOCA ONLINE</span>
-                            <span class="card-btn-sub">Stanza condivisa • Ognuno dal suo telefono</span>
+                            <span class="card-btn-title">GIOCA ONLINE</span>
+                            <span class="card-btn-sub">Stanza con codice • Ognuno scopre il ruolo dal proprio smartphone</span>
                         </div>
                     </button>
                     
+                    <!-- BOTTONE LOCALE -->
                     <button class="home-menu-card" onclick="selectMode('local')">
+                        <div class="card-seal-wrapper">
+                            <span class="card-icon-seal">📱</span>
+                        </div>
                         <div class="card-btn-content">
-                            <span class="card-btn-title">📱 MODALITÀ LOCALE</span>
-                            <span class="card-btn-sub">Classica • Un solo telefono da passarsi</span>
+                            <span class="card-btn-title">MODALITÀ LOCALE</span>
+                            <span class="card-btn-sub">Classica Pass & Play • Un solo dispositivo passato di mano in mano</span>
                         </div>
                     </button>
 
+                    <!-- BOTTONE GUIDA -->
                     <button class="home-menu-card" onclick="openGuideModal()">
+                        <div class="card-seal-wrapper">
+                            <span class="card-icon-seal">📖</span>
+                        </div>
                         <div class="card-btn-content">
-                            <span class="card-btn-title">📖 GUIDA RUOLI & REGOLE</span>
-                            <span class="card-btn-sub">Consulta abilità, fazioni e strategie</span>
+                            <span class="card-btn-title">GUIDA RUOLI & REGOLE</span>
+                            <span class="card-btn-sub">Enciclopedia dei 16 ruoli, abilità speciali e consigli strategici</span>
                         </div>
                     </button>
                 </div>
 
+                <!-- 3. PERGAMENA NARRATIVA D'ATMOSFERA -->
+                <div class="home-lore-parchment">
+                    <div class="lore-parchment-inner">
+                        <span class="lore-quote-icon">“</span>
+                        <p class="lore-text" id="home-lore-text">Il silenzio cala sulla piazza di pietra. Chi tra voi nasconde zanne affilate nel buio?</p>
+                        <span class="lore-quote-icon-right">”</span>
+                    </div>
+                </div>
+
+                <!-- 4. TICKER PILLOLA DEL VILLAGGIO -->
+                <div class="home-tip-ticker" onclick="rotateHomeTip()">
+                    <span class="tip-spark">💡</span>
+                    <span class="tip-text" id="home-tip-text">Sapevi che? L'Appestato, se non viene attaccato entro la Notte 3, muore da solo.</span>
+                </div>
+
+                <!-- 5. FIRMA IN FONDO -->
                 <div class="home-footer-credits">
                     <span>✦ LUPUS IN FABULA • REGIA DIGITALE ✦</span>
                 </div>

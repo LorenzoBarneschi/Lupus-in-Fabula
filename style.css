@@ -27,15 +27,15 @@ body {
     justify-content: center;
     background-image: radial-gradient(circle at 50% 20%, #171b28 0%, var(--bg-dark) 80%);
     
-    padding-top: max(env(safe-area-inset-top, 0px), 20px);
-    padding-bottom: max(env(safe-area-inset-bottom, 0px), 20px);
+    padding-top: max(env(safe-area-inset-top, 0px), 12px);
+    padding-bottom: max(env(safe-area-inset-bottom, 0px), 16px);
 }
 
 #main-layout {
     display: flex;
     width: 100%;
     max-width: 1100px;
-    padding: 12px;
+    padding: 8px 12px;
     gap: 20px;
     position: relative;
 }
@@ -46,24 +46,24 @@ body {
     margin: 0 auto;
     display: flex;
     flex-direction: column;
-    padding-bottom: 25px;
+    padding-bottom: 20px;
 }
 
 /* ==========================================
-   LAYOUT HOME SCREEN & 3 GRANDI PULSANTI
+   LAYOUT HOME SCREEN (PORTALE DEL BORGO)
    ========================================== */
 .screen-home-layout {
     display: flex;
     flex-direction: column;
-    justify-content: space-evenly;
-    min-height: calc(100vh - 65px);
-    padding: 6px 0 10px 0;
+    justify-content: space-between;
+    min-height: calc(100vh - 45px);
+    padding: 0 0 8px 0;
 }
 
 .home-banner-wrapper {
     width: 100%;
     max-width: 480px;
-    margin: 0 auto 10px auto;
+    margin: 0 auto 6px auto;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -74,7 +74,7 @@ body {
     width: 100%;
     border-radius: 14px;
     border: 2px solid var(--gold-dark);
-    box-shadow: 0 12px 35px rgba(0, 0, 0, 0.95), 0 0 20px rgba(212, 175, 55, 0.25);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.95), 0 0 20px rgba(212, 175, 55, 0.25);
     overflow: hidden;
     background: #0d0f17;
     display: flex;
@@ -85,50 +85,72 @@ body {
 .home-hero-banner {
     width: 100%;
     height: auto;
-    max-height: 230px;
+    max-height: 215px;
     object-fit: cover;
     display: block;
 }
 
+/* 3 SCHEDE NOBILIARI DI AZIONE */
 .home-actions-menu {
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 10px;
     width: 100%;
-    margin-top: 4px;
+    margin-top: 2px;
+    margin-bottom: 8px;
 }
 
 .home-menu-card {
-    background: linear-gradient(135deg, rgba(212, 175, 55, 0.12) 0%, rgba(18, 21, 31, 0.95) 100%);
+    background: linear-gradient(135deg, rgba(212, 175, 55, 0.14) 0%, rgba(18, 21, 31, 0.96) 100%);
     border: 1px solid var(--gold);
     border-radius: 10px;
-    padding: 16px 14px;
+    padding: 12px 14px;
     cursor: pointer;
     width: 100%;
-    text-align: center;
-    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.6);
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.6);
     transition: 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
     user-select: none;
+    text-align: left;
 }
 
 .home-menu-card:active {
-    transform: scale(0.96);
+    transform: scale(0.97);
     background: linear-gradient(135deg, var(--gold) 0%, var(--gold-dark) 100%);
+}
+
+.card-seal-wrapper {
+    width: 44px;
+    height: 44px;
+    min-width: 44px;
+    border-radius: 50%;
+    background: radial-gradient(circle at center, rgba(212, 175, 55, 0.3) 0%, rgba(0, 0, 0, 0.6) 80%);
+    border: 1.5px solid var(--gold);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    box-shadow: 0 0 10px rgba(212, 175, 55, 0.3);
+}
+
+.card-icon-seal {
+    font-size: 1.4rem;
 }
 
 .card-btn-content {
     display: flex;
     flex-direction: column;
-    align-items: center;
-    gap: 4px;
+    gap: 2px;
+    flex: 1;
 }
 
 .card-btn-title {
     font-family: 'Cinzel', serif;
-    font-size: 1.02rem;
+    font-size: 0.98rem;
     font-weight: 900;
     color: var(--gold-bright);
-    letter-spacing: 1.5px;
+    letter-spacing: 1px;
 }
 
 .home-menu-card:active .card-btn-title {
@@ -137,23 +159,90 @@ body {
 
 .card-btn-sub {
     font-family: 'Lora', serif;
-    font-size: 0.78rem;
+    font-size: 0.74rem;
     color: var(--text-muted);
-    font-style: italic;
+    line-height: 1.25;
 }
 
 .home-menu-card:active .card-btn-sub {
     color: #1a1a1a;
 }
 
+/* PERGAMENA NARRATIVA D'ATMOSFERA */
+.home-lore-parchment {
+    background: radial-gradient(circle at center, rgba(212, 175, 55, 0.08) 0%, rgba(13, 16, 24, 0.95) 100%);
+    border: 1px solid var(--gold-dark);
+    border-radius: 8px;
+    padding: 10px 14px;
+    margin: 4px 0;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+}
+
+.lore-parchment-inner {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    position: relative;
+    gap: 4px;
+}
+
+.lore-quote-icon, .lore-quote-icon-right {
+    font-family: 'Cinzel', serif;
+    font-size: 1.6rem;
+    color: var(--gold);
+    line-height: 1;
+    opacity: 0.6;
+}
+
+.lore-text {
+    font-family: 'Lora', serif;
+    font-size: 0.82rem;
+    font-style: italic;
+    color: #f0e6d2;
+    line-height: 1.35;
+    margin: 0;
+    padding: 0 4px;
+}
+
+/* TICKER PILLOLA DEL VILLAGGIO */
+.home-tip-ticker {
+    background: rgba(23, 27, 38, 0.85);
+    border: 1px dashed var(--gold-dark);
+    border-radius: 6px;
+    padding: 8px 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    user-select: none;
+    transition: 0.15s;
+    margin-top: 4px;
+}
+
+.home-tip-ticker:active {
+    background: rgba(212, 175, 55, 0.15);
+    border-style: solid;
+}
+
+.tip-spark {
+    font-size: 1.1rem;
+}
+
+.tip-text {
+    font-size: 0.75rem;
+    color: var(--gold-bright);
+    line-height: 1.3;
+}
+
 .home-footer-credits {
     text-align: center;
     font-family: 'Cinzel', serif;
-    font-size: 0.72rem;
+    font-size: 0.68rem;
     color: var(--gold-dark);
     letter-spacing: 2px;
-    margin-top: 10px;
-    opacity: 0.85;
+    margin-top: 6px;
+    opacity: 0.8;
 }
 
 /* ==========================================
@@ -1244,7 +1333,7 @@ h1, h2, h3, .glow-title, .victory-title {
 
 /* RESPONSIVE IPHONE & SLIDE HUD */
 @media (max-width: 900px) {
-    #main-layout { padding: 8px; }
+    #main-layout { padding: 4px 8px; }
     .narrator-hud {
         display: flex !important;
         position: fixed;
