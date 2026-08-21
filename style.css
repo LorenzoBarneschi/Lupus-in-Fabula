@@ -27,7 +27,7 @@ body {
     justify-content: center;
     background-image: radial-gradient(circle at 50% 20%, #171b28 0%, var(--bg-dark) 80%);
     
-    padding-top: max(env(safe-area-inset-top, 0px), 10px);
+    padding-top: max(env(safe-area-inset-top, 0px), 8px);
     padding-bottom: max(env(safe-area-inset-bottom, 0px), 14px);
 }
 
@@ -35,7 +35,7 @@ body {
     display: flex;
     width: 100%;
     max-width: 1100px;
-    padding: 6px 12px;
+    padding: 4px 12px;
     gap: 20px;
     position: relative;
 }
@@ -50,44 +50,45 @@ body {
 }
 
 /* ==========================================
-   LAYOUT HOME SCREEN (PORTALE NOBILE DEL BORGO)
+   LAYOUT HOME SCREEN (ESPERIMENTO GAME-NATIVE)
    ========================================== */
 .screen-home-layout {
     display: flex;
     flex-direction: column;
     justify-content: space-between;
-    min-height: calc(100vh - 35px);
-    padding: 0 0 6px 0;
+    min-height: calc(100vh - 30px);
+    padding: 0 0 4px 0;
 }
 
 .home-banner-wrapper {
     width: 100%;
     max-width: 480px;
-    margin: 0 auto 6px auto;
+    margin: 0 auto 4px auto;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
 }
 
-.home-banner-frame {
+.home-banner-fade {
     width: 100%;
-    border-radius: 14px;
-    border: 2px solid var(--gold-dark);
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.95), 0 0 20px rgba(212, 175, 55, 0.25);
     overflow: hidden;
-    background: #0d0f17;
     display: flex;
     justify-content: center;
     align-items: center;
+    background: transparent;
 }
 
+/* BANNER CON MASCHERA A SFUMATURA MORBIDA */
 .home-hero-banner {
     width: 100%;
     height: auto;
-    max-height: 200px;
+    max-height: 215px;
     object-fit: cover;
     display: block;
+    -webkit-mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 1) 75%, rgba(0, 0, 0, 0) 100%);
+    mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 1) 75%, rgba(0, 0, 0, 0) 100%);
+    filter: drop-shadow(0 4px 15px rgba(0, 0, 0, 0.9));
 }
 
 /* 3 GRANDI SCHEDE NOBILIARI DI AZIONE */
@@ -96,7 +97,7 @@ body {
     flex-direction: column;
     gap: 10px;
     width: 100%;
-    margin-top: 4px;
+    margin-top: 2px;
     margin-bottom: 6px;
 }
 
@@ -122,20 +123,22 @@ body {
 }
 
 .card-seal-wrapper {
-    width: 50px;
-    height: 50px;
-    min-width: 50px;
+    width: 48px;
+    height: 48px;
+    min-width: 48px;
     border-radius: 50%;
     background: radial-gradient(circle at center, rgba(212, 175, 55, 0.35) 0%, rgba(0, 0, 0, 0.7) 80%);
-    border: 2px solid var(--gold);
+    border: 1.8px solid var(--gold);
     display: flex;
     justify-content: center;
     align-items: center;
     box-shadow: 0 0 12px rgba(212, 175, 55, 0.35);
 }
 
-.card-icon-seal {
-    font-size: 1.6rem;
+.card-svg-icon {
+    width: 25px;
+    height: 25px;
+    display: block;
 }
 
 .card-btn-content {
@@ -147,7 +150,7 @@ body {
 
 .card-btn-title {
     font-family: 'Cinzel', serif;
-    font-size: 1.04rem;
+    font-size: 1.02rem;
     font-weight: 900;
     color: var(--gold-bright);
     letter-spacing: 1.5px;
@@ -211,32 +214,32 @@ body {
     text-shadow: 0 1px 1px rgba(255, 235, 195, 0.4);
 }
 
-/* TICKER PILLOLA DEL VILLAGGIO */
+/* TICKER PILLOLA DEL VILLAGGIO CON BORDO SOLIDO */
 .home-tip-ticker {
-    background: linear-gradient(135deg, rgba(28, 22, 14, 0.9) 0%, rgba(17, 20, 29, 0.95) 100%);
-    border: 1.5px dashed var(--gold);
-    border-radius: 8px;
+    background: linear-gradient(135deg, rgba(28, 22, 14, 0.92) 0%, rgba(16, 19, 28, 0.96) 100%);
+    border: 1px solid var(--gold-dark);
+    border-radius: 10px;
     padding: 10px 14px;
     display: flex;
     align-items: center;
     gap: 12px;
     cursor: pointer;
     user-select: none;
-    transition: 0.15s;
+    transition: 0.15s ease;
     margin-top: 2px;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+    box-shadow: 0 4px 18px rgba(0, 0, 0, 0.6), inset 0 0 10px rgba(212, 175, 55, 0.05);
 }
 
 .home-tip-ticker:active {
-    background: rgba(212, 175, 55, 0.2);
-    border-style: solid;
+    background: rgba(212, 175, 55, 0.18);
+    border-color: var(--gold);
 }
 
 .tip-spark-badge {
-    font-size: 1.3rem;
-    min-width: 28px;
+    min-width: 26px;
     display: flex;
     justify-content: center;
+    align-items: center;
 }
 
 .tip-text-content {
