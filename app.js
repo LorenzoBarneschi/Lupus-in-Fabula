@@ -972,7 +972,6 @@ function renderDistCardLocal() {
     document.getElementById('dist-pass-text').innerText = `Passa il telefono a ${p.name}.`;
     document.getElementById('dist-tap-text').innerText = `${p.name}, tocca la carta per rivelarla.`;
 
-    // FIX RADICALE ANTI-SPOILER: Nascondi la faccia anteriore fino al tocco!
     const frontFace = document.querySelector('#player-card-local .card-front');
     if (frontFace) frontFace.style.visibility = 'hidden';
 
@@ -1017,7 +1016,7 @@ function nextPlayerDistributionLocal() {
 }
 
 // ==========================================
-// 10. FASI NARRATORE (DUSK, NIGHT, DAY)
+// 10. FASI NARRATORE (DUSK, NIGHT, DAY) - FIX BLUFF RUOLI MORTI
 // ==========================================
 function narratorStartGame() {
     document.getElementById('mobile-hud-btn').classList.remove('hidden');
@@ -1083,6 +1082,19 @@ function buildNightStepsQueue() {
     gameState.nightSteps = steps;
 }
 
+function renderDeadRoleBluffNotice() {
+    return `
+        <div style="grid-column: 1/-1; text-align: center; padding: 18px 14px; background: rgba(18, 21, 31, 0.9); border: 1.5px dashed var(--gold-dark); border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.5);">
+            <div style="font-size: 1.8rem; margin-bottom: 6px;">🎭</div>
+            <div style="font-family: 'Cinzel', serif; font-size: 0.95rem; color: var(--gold-bright); font-weight: bold; margin-bottom: 6px;">CHIAMATA DI BLUFF</div>
+            <p style="font-size: 0.82rem; color: #bbb; line-height: 1.4; margin: 0;">
+                Il giocatore che possiede questo ruolo è <strong>MORTO</strong>.<br>
+                Recita la formula ad alta voce per non far capire nulla al villaggio, attendi qualche secondo nel silenzio e premi sotto per avanzare.
+            </p>
+        </div>
+    `;
+}
+
 function renderNightStep() {
     const step = gameState.nightSteps[gameState.currentStepIdx];
     document.getElementById('night-step-indicator').innerText = `Fase ${gameState.currentStepIdx + 1}/${gameState.nightSteps.length}`;
@@ -1091,6 +1103,7 @@ function renderNightStep() {
     document.getElementById('caller-prompt').innerText = `"${step.prompt}"`;
 
     const playersOfRole = gameState.roster.filter(p => p.role.id === step.roleId);
+    let isRoleAlive = playersOfRole.some(p => p.isAlive);
     let ownerName = '';
 
     if (playersOfRole.length > 1) {
@@ -1110,12 +1123,25 @@ function renderNightStep() {
     const living = gameState.roster.filter(p => p.isAlive);
     const dead = gameState.roster.filter(p => !p.isAlive);
 
+    // =========================================================================
+    // FIX CRITICO MOTORE: SE IL RUOLO È MORTO, MOSTRA SOLO LA SCHEDA DI BLUFF
+    // =========================================================================
+    if (!isRoleAlive && step.id !== 'cappuccetto' && step.id !== 'guardia_feedback') {
+        panel.innerHTML = renderDeadRoleBluffNotice();
+        return;
+    }
+
     if (step.id === 'amanti_shelter') {
         const amantiMembers = gameState.roster.filter(p => p.role.id === 'amanti' && p.isAlive);
         amantiMembers.forEach(am => {
             panel.innerHTML += `<button class="target-btn" onclick="selectNightTarget('amantiShelter', '${am.id}', this)">🏠 Casa di ${am.name}</button>`;
         });
     } else if (step.id === 'cappuccetto') {
+        const cap = gameState.roster.find(p => p.role.id === 'cappuccetto');
+        if (!cap || !cap.isAlive) {
+            panel.innerHTML = renderDeadRoleBluffNotice();
+            return;
+        }
         const aWolf = gameState.roster.find(p => p.isWolf);
         panel.innerHTML = `<div style="grid-column: 1/-1; text-align:center; padding:15px; background:#1b2030; border-radius:8px; border:1px solid var(--gold-dark);">
             Lupo da mostrare a Cappuccetto: <br><strong style="color:var(--gold); font-size:1.3rem;">🐺 ${aWolf ? aWolf.name : 'Nessun Lupo'}</strong>
@@ -1223,6 +1249,11 @@ function renderNightStep() {
             });
         }
     } else if (step.id === 'guardia_feedback') {
+        const guardiaPlayer = gameState.roster.find(p => p.role.id === 'guardia');
+        if (!guardiaPlayer || !guardiaPlayer.isAlive) {
+            panel.innerHTML = renderDeadRoleBluffNotice();
+            return;
+        }
         const saved = checkGuardiaSuccess();
         panel.innerHTML = `<div style="grid-column: 1/-1; text-align:center; padding:16px; background:#1b2030; border-radius:8px; border:1px solid ${saved ? '#44ff44' : '#444'};">
             Esito per la Guardia: <br>
@@ -1302,7 +1333,9 @@ function revealMediumGuide(playerId, btn) {
 }
 
 function checkGuardiaSuccess() {
-    if (!gameState.nightActions.guardiaTarget) return null;
+    const guardiaPlayer = gameState.roster.find(p => p.role.id === 'guardia');
+    if (!guardiaPlayer || !guardiaPlayer.isAlive || !gameState.nightActions.guardiaTarget) return null;
+    
     const target = gameState.roster.find(p => p.id === gameState.nightActions.guardiaTarget);
     if (gameState.nightActions.wolvesTarget === target.id) {
         const aWolf = gameState.roster.filter(p => p.isWolf && p.isAlive).sort(() => Math.random() - 0.5)[0];
@@ -1335,17 +1368,26 @@ function submitNightStep() {
 }
 
 // ==========================================
-// 11. ESITI NOTTE & ALBA
+// 11. ESITI NOTTE & ALBA - GUARDIE LOGICHE ANTI-MORTI
 // ==========================================
 function resolveNightOutcomes() {
     let deathsThisNight = [];
     let transformedLycan = false;
     let plagueTriggered = false;
 
-    const wolfTarget = gameState.roster.find(p => p.id === gameState.nightActions.wolvesTarget);
-    const alphaTarget = gameState.roster.find(p => p.id === gameState.nightActions.alphaWolfTarget);
-    const damaProt = gameState.nightActions.damaTarget;
-    const guardiaProt = gameState.nightActions.guardiaTarget;
+    // Guardie per le protezioni: attive SOLO se il ruolo protettore è vivo
+    const damaPlayer = gameState.roster.find(p => p.role.id === 'dama');
+    const guardiaPlayer = gameState.roster.find(p => p.role.id === 'guardia');
+    const damaProt = (damaPlayer && damaPlayer.isAlive) ? gameState.nightActions.damaTarget : null;
+    const guardiaProt = (guardiaPlayer && guardiaPlayer.isAlive) ? gameState.nightActions.guardiaTarget : null;
+    
+    // Guardie per gli attacchi: attivi SOLO se chi attacca è vivo
+    const wolvesAlive = gameState.roster.some(p => p.isWolf && p.isAlive);
+    const wolfTarget = wolvesAlive ? gameState.roster.find(p => p.id === gameState.nightActions.wolvesTarget) : null;
+
+    const alphaPlayer = gameState.roster.find(p => p.role.id === 'lupo_alpha');
+    const alphaTarget = (alphaPlayer && alphaPlayer.isAlive) ? gameState.roster.find(p => p.id === gameState.nightActions.alphaWolfTarget) : null;
+    
     const amantiShelterId = gameState.nightActions.amantiShelter;
 
     function handleWolfAttack(target) {
@@ -1381,7 +1423,10 @@ function resolveNightOutcomes() {
     handleWolfAttack(wolfTarget);
     handleWolfAttack(alphaTarget);
 
-    if (gameState.nightActions.assassinoTarget && !gameState.history.assassinoBlocked) {
+    const assassinPlayer = gameState.roster.find(p => p.role.id === 'assassino');
+    const isAssassinAlive = assassinPlayer && assassinPlayer.isAlive;
+
+    if (gameState.nightActions.assassinoTarget && isAssassinAlive && !gameState.history.assassinoBlocked) {
         const aTarget = gameState.roster.find(p => p.id === gameState.nightActions.assassinoTarget);
         const guess = gameState.nightActions.assassinoRoleGuess;
         const isProtected = (aTarget.id === damaProt || aTarget.id === guardiaProt);
@@ -1398,8 +1443,7 @@ function resolveNightOutcomes() {
                         deathsThisNight.push({ player: aTarget, reason: 'assassin' });
                         if (aTarget.role.id === 'appestato') {
                             plagueTriggered = true;
-                            const assassinPlayer = gameState.roster.find(p => p.role.id === 'assassino');
-                            if (assassinPlayer && !deathsThisNight.some(d => d.player.id === assassinPlayer.id)) {
+                            if (!deathsThisNight.some(d => d.player.id === assassinPlayer.id)) {
                                 deathsThisNight.push({ player: assassinPlayer, reason: 'plague' });
                             }
                         }
@@ -1641,7 +1685,10 @@ function processReferendumVotes() {
 }
 
 function condemnToRogo(condemned) {
-    if (condemned.id === gameState.nightActions.monacaTarget) {
+    const monacaPlayer = gameState.roster.find(p => p.role.id === 'monaca');
+    const isMonacaAlive = monacaPlayer && monacaPlayer.isAlive;
+
+    if (condemned.id === gameState.nightActions.monacaTarget && isMonacaAlive) {
         alert(`Il villaggio ha votato ${condemned.name}, ma le preghiere della Monaca Silente lo salvano dal rogo! Nessuna morte.`);
         endDayPhase();
         return;
