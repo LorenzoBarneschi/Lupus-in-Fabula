@@ -83,16 +83,19 @@
                         </div>
                     </button>
                     
-                    <!-- BOTTONE LOCALE: SMARTPHONE CON FRECCE ORBITALI ESTERNE (PASS & PLAY) -->
+                    <!-- BOTTONE LOCALE: SMARTPHONE CENTRALE PULITO + FRECCE ROTAZIONE STACCATE (PASS & PLAY) -->
                     <button class="home-menu-card" onclick="selectMode('local')">
                         <div class="card-seal-wrapper">
                             <svg class="card-svg-icon" viewBox="0 0 24 24" fill="none" stroke="url(#imperial-gold-grad)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                                <rect x="8" y="5.5" width="8" height="13" rx="1.5"/>
-                                <circle cx="12" cy="15.5" r="0.8" fill="url(#imperial-gold-fill)"/>
-                                <path d="M4 14.5c-.7-1.5-.7-3.5 0-5 1-2.2 3.5-3.5 3.5-3.5"/>
-                                <polyline points="4.5 6 7.5 6 7.5 9"/>
-                                <path d="M20 9.5c.7 1.5.7 3.5 0 5-1 2.2-3.5 3.5-3.5 3.5"/>
-                                <polyline points="19.5 18 16.5 18 16.5 15"/>
+                                <!-- Telefono centrale snello e pulito -->
+                                <rect x="9" y="5.5" width="6" height="13" rx="1.5"/>
+                                <circle cx="12" cy="15.5" r="0.6" fill="url(#imperial-gold-fill)"/>
+                                <!-- Freccia sinistra staccata che sale -->
+                                <path d="M4 14.5 C2.8 11.5 3.2 8.5 5 6"/>
+                                <polyline points="3 6.5 5.5 5.5 6.5 8"/>
+                                <!-- Freccia destra staccata che scende -->
+                                <path d="M20 9.5 C21.2 12.5 20.8 15.5 19 18"/>
+                                <polyline points="21 17.5 18.5 18.5 17.5 16"/>
                             </svg>
                         </div>
                         <div class="card-btn-content">
@@ -129,18 +132,13 @@
                 <div class="home-tip-ticker" onclick="rotateHomeTip()">
                     <div class="tip-spark-badge">
                         <svg viewBox="0 0 24 24" width="23" height="23" fill="url(#imperial-gold-fill)">
-                            <!-- Cuscinetto centrale predatore -->
                             <path d="M12 12.5c-2.2 0-3.8 1.8-3.4 4.2.4 2.2 3.4 4.3 3.4 4.3s3-2.1 3.4-4.3c.4-2.4-1.2-4.2-3.4-4.2z"/>
-                            <!-- Dito 1 con Artiglio -->
                             <ellipse cx="6" cy="10.5" rx="1.4" ry="2" transform="rotate(-25 6 10.5)"/>
                             <path d="M5.2 8.5c-.3-1.8-1.5-2.8-1.5-2.8s1.8.2 2.5 1.6z"/>
-                            <!-- Dito 2 con Artiglio -->
                             <ellipse cx="9.8" cy="7.8" rx="1.4" ry="2.2" transform="rotate(-10 9.8 7.8)"/>
                             <path d="M9.4 5.5c-.2-2-.8-3.2-.8-3.2s1.4.6 1.8 2.2z"/>
-                            <!-- Dito 3 con Artiglio -->
                             <ellipse cx="14.2" cy="7.8" rx="1.4" ry="2.2" transform="rotate(10 14.2 7.8)"/>
                             <path d="M14.6 5.5c.2-2 .8-3.2.8-3.2s-1.4.6-1.8 2.2z"/>
-                            <!-- Dito 4 con Artiglio -->
                             <ellipse cx="18" cy="10.5" rx="1.4" ry="2" transform="rotate(25 18 10.5)"/>
                             <path d="M18.8 8.5c.3-1.8 1.5-2.8 1.5-2.8s-1.8.2-2.5 1.6z"/>
                         </svg>

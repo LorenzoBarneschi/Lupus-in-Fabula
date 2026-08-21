@@ -79,15 +79,16 @@ body {
     background: transparent;
 }
 
-/* BANNER CON MASCHERA A SFUMATURA SU TUTTI E 4 I LATI */
+/* BANNER CON DISSOLVENZA RADIALE PROFONDA A 4 LATI */
 .home-hero-banner {
     width: 100%;
     height: auto;
     max-height: 215px;
     object-fit: cover;
     display: block;
-    -webkit-mask-image: radial-gradient(ellipse 95% 85% at 50% 50%, rgba(0, 0, 0, 1) 60%, rgba(0, 0, 0, 0) 100%);
-    mask-image: radial-gradient(ellipse 95% 85% at 50% 50%, rgba(0, 0, 0, 1) 60%, rgba(0, 0, 0, 0) 100%);
+    /* Maschera che taglia e sfuma i 4 bordi rettangolari nel nero profondo */
+    -webkit-mask-image: radial-gradient(ellipse 85% 72% at 50% 48%, rgba(0, 0, 0, 1) 45%, rgba(0, 0, 0, 0.7) 68%, rgba(0, 0, 0, 0) 96%);
+    mask-image: radial-gradient(ellipse 85% 72% at 50% 48%, rgba(0, 0, 0, 1) 45%, rgba(0, 0, 0, 0.7) 68%, rgba(0, 0, 0, 0) 96%);
     filter: drop-shadow(0 6px 20px rgba(0, 0, 0, 0.95));
 }
 
